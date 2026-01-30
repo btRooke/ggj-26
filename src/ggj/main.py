@@ -42,3 +42,6 @@ def main():
         clock.tick(FPS)
 
     pg.quit()
+
+if __name__ == "__main__":
+    main()
