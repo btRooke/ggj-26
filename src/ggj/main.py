@@ -1,7 +1,7 @@
 import logging
 
 import pygame as pg
-
+from ggj import camera as cam
 
 logging.basicConfig(
     filename="ggj.log",
@@ -18,7 +18,7 @@ FPS = 60
 def main():
     pg.init()
     clock = pg.time.Clock()
-    screen = pg.display.set_mode((512, 512), pg.RESIZABLE)
+    screen = pg.display.set_mode(cam.BASE_RESOLUTION, pg.RESIZABLE)
 
     done = False
 
@@ -29,7 +29,9 @@ def main():
                 done = True
 
         screen.fill((255, 0, 255))
-        pg.draw.rect(screen, (255, 0, 0), (200, 200, 50, 50))
+        pg.draw.rect(
+            screen, (255, 0, 0), cam.world_to_screen_rect(pg.Rect(200, 200, 50, 50))
+        )
         pg.display.flip()
         clock.tick(FPS)
 
