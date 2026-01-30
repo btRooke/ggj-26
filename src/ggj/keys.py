@@ -36,3 +36,35 @@ class KeyManager:
 
 
 key_manager = KeyManager()
+
+
+class KeyMaps:
+    _player_left: int
+    _player_right: int
+    _player_up: int
+    _player_down: int
+
+    def __init__(self):
+        self._player_left = pg.K_a
+        self._player_right = pg.K_d
+        self._player_up = pg.K_w
+        self._player_down = pg.K_s
+
+    @property
+    def player_left(self):
+        return self._player_left
+
+    @property
+    def player_right(self):
+        return self._player_right
+
+    @property
+    def player_up(self):
+        return self._player_up
+
+    @property
+    def player_down(self):
+        return self._player_down
+
+
+key_map = KeyMaps()

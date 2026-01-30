@@ -3,7 +3,7 @@ import subprocess
 
 import pygame as pg
 from ggj import camera as cam
-from ggj.keys import key_manager
+from ggj.keys import key_manager, key_map
 
 logging.basicConfig(
     filename="ggj.log",
@@ -21,13 +21,13 @@ def get_move_vector() -> pg.Vector2:
     move_camera = pg.Vector2()
     key_manager.update()
 
-    if key_manager.is_key_down(pg.K_w):
+    if key_manager.is_key_down(key_map.player_up):
         move_camera += pg.Vector2(0, -10)
-    if key_manager.is_key_down(pg.K_s):
+    if key_manager.is_key_down(key_map.player_down):
         move_camera += pg.Vector2(0, 10)
-    if key_manager.is_key_down(pg.K_a):
+    if key_manager.is_key_down(key_map.player_left):
         move_camera += pg.Vector2(-10, 0)
-    if key_manager.is_key_down(pg.K_d):
+    if key_manager.is_key_down(key_map.player_right):
         move_camera += pg.Vector2(10, 0)
 
     return move_camera
