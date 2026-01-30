@@ -39,24 +39,8 @@ class MessageBox(pygame.sprite.Sprite):
 
         line_groups = []
 
-        for message in self.messages[:max_lines]:
-            line_group = []
-
-            characters = list(message)
-            characters.reverse()
-
-            while characters:
-                line_chars: list[str] = []
-
-                while (
-                    characters
-                    and self.line_width(line_chars + [characters[-1]]) < width
-                ):
-                    line_chars.append(characters.pop())
-
-                line_group.append("".join(line_chars))
-
-            line_groups.append(line_group)
+        for message in self.messages[-max_lines:]:
+            line_groups.append(self.create_line_group(message, width))
 
         line_groups.reverse()
 
@@ -72,3 +56,16 @@ class MessageBox(pygame.sprite.Sprite):
                 next_msg_y += self.font.get_height()
 
             lines_rendered += len(group)
+
+    def create_line_group(self, message, width) -> list[str]:
+        line_group = []
+        characters = list(message)
+        characters.reverse()
+        while characters:
+            line_chars: list[str] = []
+
+            while characters and self.line_width(line_chars + [characters[-1]]) < width:
+                line_chars.append(characters.pop())
+
+            line_group.append("".join(line_chars))
+        return line_group
