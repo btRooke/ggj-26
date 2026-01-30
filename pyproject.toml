@@ -2,7 +2,8 @@
 name = "ggj"
 version = "0.1.0"
 dependencies = [
-    "pygame"
+    "pygame",
+    "mypy"
 ]
 scripts = { ggj = "ggj.main:main" }
 
@@ -11,3 +12,6 @@ dev = [
     "ruff",
     "pyright",
 ]
+
+[tool.mypy]
+check_untyped_defs = true

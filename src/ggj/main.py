@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 import pygame as pg
 
@@ -15,11 +16,15 @@ logger = logging.getLogger(__name__)
 FPS = 60
 
 
+def check_types() -> None:
+    subprocess.run(["mypy", "-p", "ggj"], check=True)
+
+
 def main():
+    check_types()
     pg.init()
     clock = pg.time.Clock()
     screen = pg.display.set_mode((512, 512), pg.RESIZABLE)
-
     done = False
 
     logger.info("starting main loop")
