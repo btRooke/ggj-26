@@ -43,6 +43,7 @@ def main():
     pg.init()
     clock = pg.time.Clock()
     screen = pg.display.set_mode(cam.BASE_RESOLUTION, pg.RESIZABLE)
+    pg.display.set_caption("Stickney Lineman")
 
     done = False
 
