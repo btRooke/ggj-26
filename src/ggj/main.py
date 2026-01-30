@@ -16,6 +16,21 @@ logger = logging.getLogger(__name__)
 FPS = 60
 
 
+def get_move_vector(event) -> pg.Vector2:
+    move_camera = pg.Vector2()
+
+    if event.key == pg.K_w:
+        move_camera += pg.Vector2(0, 10)
+    if event.key == pg.K_s:
+        move_camera += pg.Vector2(0, -10)
+    if event.key == pg.K_a:
+        move_camera += pg.Vector2(10, 0)
+    if event.key == pg.K_d:
+        move_camera += pg.Vector2(-10, 0)
+
+    return move_camera
+
+
 def check_types() -> None:
     subprocess.run(["mypy", "-p", "ggj"], check=True)
 
@@ -28,15 +43,27 @@ def main():
 
     done = False
 
+    camera = cam.Camera()
+
     logger.info("starting main loop")
+
+    move_camera = pg.Vector2()
+
     while not done:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 done = True
+            elif event.type == pg.KEYDOWN:
+                move_camera += get_move_vector(event)
+            elif event.type == pg.KEYUP:
+                move_camera -= get_move_vector(event)
 
         screen.fill((255, 0, 255))
+
+        camera.move(move_camera)
+
         pg.draw.rect(
-            screen, (255, 0, 0), cam.world_to_screen_rect(pg.Rect(200, 200, 50, 50))
+            screen, (255, 0, 0), camera.get_screen_coords(pg.Rect((200, 200, 50, 50)))
         )
         pg.display.flip()
         clock.tick(FPS)
