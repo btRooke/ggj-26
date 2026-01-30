@@ -3,6 +3,7 @@ import subprocess
 
 import pygame as pg
 from ggj import camera as cam
+from ggj.ui import UserInterface
 from ggj.keys import key_manager, key_map
 
 logging.basicConfig(
@@ -46,7 +47,7 @@ def main():
     done = False
 
     camera = cam.Camera()
-
+    user_interface = UserInterface()
     logger.info("starting main loop")
 
     while not done:
@@ -62,9 +63,11 @@ def main():
         pg.draw.rect(
             screen, (255, 0, 0), camera.get_screen_coords(pg.Rect((200, 200, 50, 50)))
         )
+        user_interface.draw(screen)
         pg.display.flip()
         clock.tick(FPS)
 
+    user_interface.shutdown()
     pg.quit()
 
 
