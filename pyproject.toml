@@ -1,4 +1,7 @@
 [project]
 name = "ggj"
+version = "0.1.0"
 dependencies = [
+    "pygame"
 ]
+scripts = { ggj = "ggj.main:main" }
