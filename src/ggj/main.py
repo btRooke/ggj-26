@@ -20,13 +20,13 @@ def get_move_vector(event) -> pg.Vector2:
     move_camera = pg.Vector2()
 
     if event.key == pg.K_w:
-        move_camera += pg.Vector2(0, 10)
-    if event.key == pg.K_s:
         move_camera += pg.Vector2(0, -10)
+    if event.key == pg.K_s:
+        move_camera += pg.Vector2(0, 10)
     if event.key == pg.K_a:
-        move_camera += pg.Vector2(10, 0)
-    if event.key == pg.K_d:
         move_camera += pg.Vector2(-10, 0)
+    if event.key == pg.K_d:
+        move_camera += pg.Vector2(10, 0)
 
     return move_camera
 
