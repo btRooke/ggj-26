@@ -29,13 +29,17 @@ class MessageBox(pygame.sprite.Sprite):
     def render_all_messages(self) -> None:
         width = self.image.get_rect().width - self.padding * 2
 
+        max_lines = (
+            int(self.image.get_rect().height - 2 * self.padding)
+        ) // self.font.get_height()
+
         self.image.fill("black")
 
         next_msg_y = self.padding
 
         line_groups = []
 
-        for message in self.messages:
+        for message in self.messages[:max_lines]:
             line_group = []
 
             characters = list(message)
@@ -53,10 +57,6 @@ class MessageBox(pygame.sprite.Sprite):
                 line_group.append("".join(line_chars))
 
             line_groups.append(line_group)
-
-        max_lines = (
-            int(self.image.get_rect().height - 2 * self.padding)
-        ) // self.font.get_height()
 
         line_groups.reverse()
 
