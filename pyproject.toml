@@ -5,3 +5,9 @@ dependencies = [
     "pygame"
 ]
 scripts = { ggj = "ggj.main:main" }
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pyright",
+]
