@@ -1,6 +1,19 @@
+import logging
+
 import pygame as pg
 
+
+logging.basicConfig(
+    filename="ggj.log",
+    filemode="a",
+    format="%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.DEBUG,
+)
+logger = logging.getLogger(__name__)
+
 FPS = 60
+
 
 def main():
     pg.init()
@@ -9,6 +22,7 @@ def main():
 
     done = False
 
+    logger.info("starting main loop")
     while not done:
         for event in pg.event.get():
             if event.type == pg.QUIT:
