@@ -4,7 +4,9 @@ import subprocess
 import pygame as pg
 from ggj import camera as cam
 from ggj.ui import UserInterface
-from ggj.keys import key_manager, key_map
+from ggj.keys import key_manager
+from ggj.player import Player
+from ggj.camera import camera
 
 logging.basicConfig(
     filename="ggj.log",
@@ -16,22 +18,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 FPS = 60
-
-
-def get_move_vector() -> pg.Vector2:
-    move_camera = pg.Vector2()
-    key_manager.update()
-
-    if key_manager.is_key_down(key_map.player_up):
-        move_camera += pg.Vector2(0, -10)
-    if key_manager.is_key_down(key_map.player_down):
-        move_camera += pg.Vector2(0, 10)
-    if key_manager.is_key_down(key_map.player_left):
-        move_camera += pg.Vector2(-10, 0)
-    if key_manager.is_key_down(key_map.player_right):
-        move_camera += pg.Vector2(10, 0)
-
-    return move_camera
 
 
 def check_types() -> None:
@@ -47,8 +33,13 @@ def main():
 
     done = False
 
-    camera = cam.Camera()
+    camera.set_screen(screen)
     user_interface = UserInterface()
+    player_group: pg.sprite.Group = pg.sprite.Group()
+    player = Player()
+    player_group.add(player)
+    camera.follow(player)
+
     logger.info("starting main loop")
 
     while not done:
@@ -59,11 +50,19 @@ def main():
             continue
 
         screen.fill((255, 0, 255))
-        camera.move(get_move_vector())
-
+        player_group.update()
         pg.draw.rect(
-            screen, (255, 0, 0), camera.get_screen_coords(pg.Rect((200, 200, 50, 50)))
+            screen,
+            (0, 255, 0),
+            camera.get_screen_rect(camera.get_world_rect()),
         )
+        pg.draw.rect(
+            screen,
+            (0, 0, 255),
+            camera.get_screen_rect(pg.Rect(20, 20, 20, 20)),
+        )
+        camera.update()
+        player_group.draw(screen)
         user_interface.draw(screen)
         pg.display.flip()
         clock.tick(FPS)

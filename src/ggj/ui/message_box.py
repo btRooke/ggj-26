@@ -54,7 +54,6 @@ class MessageBox(pygame.sprite.Sprite):
         lines_rendered = 0
 
         for group in line_groups:
-
             # stop if will exceed box size
 
             if lines_rendered + len(group) > self.max_lines():
