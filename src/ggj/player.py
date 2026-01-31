@@ -115,25 +115,24 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                 (player_world_bounds.centerx, player_world_bounds.y),
                 (player_world_bounds.centerx, player_world_bounds.bottom),
             ):
-                self._point_mass.position.y = other_world_bounds.top - (
-                    self.image.get_height() / 2
-                )
+                self._point_mass.position.y = other_world_bounds.top - (player_world_bounds.height / 2)
                 if player_world_bounds.centery < other_world_bounds.centery:
                     if (
                         not self._player_movement_action()
                         and self._point_mass.get_force().y > 0
                     ):
                         self._point_mass.reset_velocty()
-                        self._point_mass.add_force(
-                            pg.Vector2(0, -self._point_mass.get_force().y)
+                        self._point_mass.add_force( pg.Vector2(0, -self._point_mass.get_force().y)
                         )
                 else:
                     impulse = SURFACE_IMPULSE * -self._point_mass.get_force()
                     self._point_mass.add_force(impulse)
                     self._point_mass.reset_velocty()
                     self._point_mass.position.y = (
-                        other_world_bounds.bottom + PLAYER_COLLISION_BUFFER
-                    ) + (self.image.get_height() / 2)
+                        other_world_bounds.bottom
+                        + (player_world_bounds.height / 2)
+                        + PLAYER_COLLISION_BUFFER
+                    )
 
             if other_world_bounds.clipline(
                 (player_world_bounds.left, player_world_bounds.centery),

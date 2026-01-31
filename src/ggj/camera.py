@@ -10,19 +10,11 @@ BASE_RESOLUTION = (1280, 720)
 
 
 def world_to_screen_vector2(world_vector: pg.Vector2) -> pg.Vector2:
-    window = pg.display.Info()
-    size_multiplier_x = window.current_w / BASE_RESOLUTION[0]
-    size_multiplier_y = window.current_h / BASE_RESOLUTION[1]
-    return pg.Vector2(
-        size_multiplier_x * world_vector.x, size_multiplier_y * world_vector.y
-    )
+    return world_vector
 
 
 def world_to_screen_rect(world_rect: pg.Rect) -> pg.Rect:
-    window = pg.display.Info()
-    size_multiplier_x = window.current_w / BASE_RESOLUTION[0]
-    size_multiplier_y = window.current_h / BASE_RESOLUTION[1]
-    return world_rect.scale_by(size_multiplier_x, size_multiplier_y)
+    return world_rect
 
 
 # Viewport that the camera can collide with
@@ -114,9 +106,9 @@ class Camera(game_object.GameObject):
                 self.player_box.top = follow_rect.center[1]
 
     def get_view_port(self) -> pg.Rect:
-        top_left = self.player_box.centerx - (BASE_RESOLUTION[0] / 2)
-        top_right = self.player_box.centery - (BASE_RESOLUTION[1] / 2)
         window = pg.display.Info()
+        top_left = self.player_box.centerx - (window.current_w / 2)
+        top_right = self.player_box.centery - (window.current_h / 2)
         return pg.Rect(top_left, top_right, window.current_w, window.current_h)
 
     def on_collide(self, other: game_object.GameObject) -> None:
@@ -127,15 +119,11 @@ camera = Camera()
 
 
 def screen_to_world_vector2(screen_vector: pg.Vector2) -> pg.Vector2:
-    screen = pg.display.Info()
-    size_multiplier_x = screen.current_w / BASE_RESOLUTION[0]
-    size_multiplier_y = screen.current_h / BASE_RESOLUTION[1]
-
     camera_port = camera.get_view_port()
 
     return pg.Vector2(
-        camera_port.x + (screen_vector.x / size_multiplier_x),
-        camera_port.y + (screen_vector.y / size_multiplier_y),
+        camera_port.x + screen_vector.x,
+        camera_port.y + screen_vector.y,
     )
 
 
