@@ -1,23 +1,24 @@
 import pygame as pg
-from ggj.camera import camera, screen_to_world_vector2, world_to_screen_vector2
+from ggj.camera import camera, screen_to_world_vector2
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PointMass, Drawable
+from ggj.world import SurfaceBlock
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 PLAYER_SIZE = 50
-PLAYER_MAX_SPEED = 5
+PLAYER_MAX_SPEED = 25
 PLAYER_MASS = 10
 
 SPRING_CONSTANT = 0.001
 
 
 class Player(pg.sprite.Sprite, GameObject):
-    _world_rect: pg.Rect
     _point_mass: PointMass
     image: pg.Surface
+    apply_gravity: bool
 
     def __init__(self):
         super().__init__()
@@ -29,6 +30,7 @@ class Player(pg.sprite.Sprite, GameObject):
             pg.Vector2(0, 0), PLAYER_MASS, clamp_speed=PLAYER_MAX_SPEED
         )
         self._populate_rect()
+        self.apply_gravity = True
 
     def _populate_rect(self):
         # contains the actual dimension on the screen
@@ -54,6 +56,8 @@ class Player(pg.sprite.Sprite, GameObject):
             logger.debug(f"applying force {spring_force}")
             self._point_mass.add_force(spring_force)
 
+        if self.apply_gravity:
+            self._point_mass.apply_gravity()
         self._point_mass.add_force(force_multiplier * net_force)
         self._point_mass.integrate()
 
@@ -61,11 +65,27 @@ class Player(pg.sprite.Sprite, GameObject):
 
     def get_world_rect(self) -> pg.Rect:
         return pg.Rect(
-            self._point_mass.position.x,
-            self._point_mass.position.y,
+            self._point_mass.position.x - (PLAYER_SIZE / 2),
+            self._point_mass.position.y - (PLAYER_SIZE / 2),
             PLAYER_SIZE,
             PLAYER_SIZE,
         )
+
+    def on_collide(self, other: GameObject) -> None:
+        if isinstance(other, SurfaceBlock):
+            player_rect = self.get_world_rect()
+            other_rect = other.get_world_rect()
+
+            logging.debug("collide with surface")
+            self.apply_gravity = False
+
+            if player_rect.clipline(other_rect.topleft, other_rect.topright):
+                # equal and opposite reaction
+                self._point_mass.add_force(
+                    pg.Vector2(-self._point_mass.get_force().y, 0)
+                )
+                self._point_mass.reset_velocty()
+                logging.debug("collide top")
 
 
 class GrapplingHook(Drawable):

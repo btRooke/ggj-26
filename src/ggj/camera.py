@@ -2,8 +2,6 @@ import pygame as pg
 from typing import Optional, cast
 import logging
 
-from pygame.math import Vector2
-
 from ggj import game_object
 
 logger = logging.getLogger(__name__)
@@ -122,6 +120,9 @@ class Camera(game_object.GameObject):
             )
         )
         return pg.Rect(pos.x, pos.y, dimensions.x, dimensions.y)
+
+    def on_collide(self, other: game_object.GameObject) -> None:
+        pass
 
 
 camera = Camera()
