@@ -1,4 +1,7 @@
 import pygame as pg
+import pygame.transform
+
+from ggj.assets import SPRITE_SHEET_PATH
 from ggj.camera import camera, screen_to_world_vector2
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
@@ -8,7 +11,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-PLAYER_SIZE = 50
 PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
@@ -16,6 +18,37 @@ SPRING_CONSTANT = 0.1
 SURFACE_IMPULSE = 300
 
 PLAYER_COLLISION_BUFFER = 2
+
+SPRITE_HEIGHT = 42
+SPRITE_WIDTH = 42
+SPRITE_SCALE = 4
+
+
+def _load_sprite_sheet() -> list[pg.Surface]:
+    sheet = pg.image.load(SPRITE_SHEET_PATH).convert_alpha()
+
+    if sheet.get_width() % SPRITE_WIDTH != 0 or sheet.get_height() != SPRITE_HEIGHT:
+        raise ValueError(f"Sprite sheet has wrong dims, {sheet.get_rect()}")
+
+    sprites = []
+    # sprites.append(sheet)
+
+    for i in range(0, sheet.get_width(), SPRITE_WIDTH):
+        # create blank surface for sprite
+        sprite = pygame.surface.Surface((SPRITE_HEIGHT, SPRITE_WIDTH), pygame.SRCALPHA)
+
+        # blit the correct part to it
+        pygame.transform.chop(
+            sheet, pygame.rect.Rect(i, 0, SPRITE_WIDTH, SPRITE_HEIGHT)
+        )
+        rect = sprite.get_rect()
+        rect.x = i
+        sprite.blit(sheet, dest=(0, 0), area=rect)
+
+        # scale and append
+        sprites.append(pygame.transform.scale_by(sprite, SPRITE_SCALE))
+
+    return sprites
 
 
 class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
@@ -25,8 +58,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def __init__(self, start_pos: pg.Vector2):
         super().__init__()
 
-        self.image = pg.Surface((PLAYER_SIZE, PLAYER_SIZE))
-        self.image.fill(pg.Color(255, 0, 0, 0))
+        self.sprites = _load_sprite_sheet()
+        self.image = self.sprites[0]
         self.rect = self.image.get_rect()
         self._point_mass = PointMass(
             start_pos, PLAYER_MASS, clamp_speed=PLAYER_MAX_SPEED
@@ -64,10 +97,10 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
     def get_world_rect(self) -> pg.Rect:
         return pg.Rect(
-            self._point_mass.position.x - (PLAYER_SIZE / 2),
-            self._point_mass.position.y - (PLAYER_SIZE / 2),
-            PLAYER_SIZE,
-            PLAYER_SIZE,
+            self._point_mass.position.x - (self.image.get_width() / 2),
+            self._point_mass.position.y - (self.image.get_height() / 2),
+            self.image.get_width(),
+            self.image.get_height(),
         )
 
     def _player_movement_action(self) -> bool:
@@ -83,7 +116,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                 (player_world_bounds.centerx, player_world_bounds.y),
                 (player_world_bounds.centerx, player_world_bounds.bottom),
             ):
-                self._point_mass.position.y = other_world_bounds.top - (PLAYER_SIZE / 2)
+                self._point_mass.position.y = other_world_bounds.top - (
+                    self.image.get_height() / 2
+                )
                 if player_world_bounds.centery < other_world_bounds.centery:
                     if (
                         not self._player_movement_action()
@@ -99,7 +134,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                     self._point_mass.reset_velocty()
                     self._point_mass.position.y = (
                         other_world_bounds.bottom + PLAYER_COLLISION_BUFFER
-                    ) + (PLAYER_SIZE / 2)
+                    ) + (self.image.get_height() / 2)
 
             if other_world_bounds.clipline(
                 (player_world_bounds.left, player_world_bounds.centery),
