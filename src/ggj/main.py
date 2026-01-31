@@ -37,8 +37,13 @@ def main():
 
     done = False
 
+
     surface_block_vectors = surface_blocks()
-    print(surface_block_vectors)
+
+    # only render the 1/4 of the surface blocks, prioritise LHS of map
+    surface_block_vectors.sort(key=lambda b: b.x)
+    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors) // 4]
+
     blocks = [SurfaceBlock(v) for v in surface_block_vectors]
 
     user_interface = UserInterface(screen)

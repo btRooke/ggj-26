@@ -3,7 +3,7 @@ from ggj.camera import camera
 import pygame as pg
 import logging
 
-SURFACE_BLOCK_SIZE = (10, 10)
+SURFACE_BLOCK_SIZE = (25, 25)
 COLOR = pg.Color(255, 125, 0)
 
 WALL_MASS = 1000

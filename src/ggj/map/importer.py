@@ -13,8 +13,6 @@ WORLD_PNG_PATH = Path(__file__).parent / "world.png"
 def world_rgb_array():
     im = Image.open(WORLD_PNG_PATH)
 
-    print(im.format, im.size, im.mode)
-
     assert im.format == "PNG"
     assert im.mode == "RGB"
 
