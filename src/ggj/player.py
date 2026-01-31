@@ -69,11 +69,22 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         )
 
     def on_collide(self, other: GameObject) -> None:
+        player_world_bounds = self.get_world_rect()
+
         if isinstance(other, SurfaceBlock):
             logging.debug("collide with surface")
 
-            impulse_force = -self._point_mass.get_force().normalize() * SURFACE_IMPULSE
-            self._point_mass.add_force(impulse_force)
+            other_world_bounds = other.get_world_rect()
+
+            if player_world_bounds.clipline(
+                other_world_bounds.topleft, other_world_bounds.topright
+            ):
+                self._point_mass.make_rigid_y()
+                #self._point_mass.add_force(-self._point_mass.get_force())
+                self._point_mass.reset_velocty()
+            else:
+                impulse_force = -self._point_mass.get_force().normalize() * SURFACE_IMPULSE
+                self._point_mass.add_force(impulse_force)
 
     @property
     def point_mass(self) -> PointMass:
