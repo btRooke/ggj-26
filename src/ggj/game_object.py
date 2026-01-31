@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable, Protocol
+from typing import Protocol
 import pygame as pg
 from pygame.math import Vector2
 import logging
@@ -91,34 +91,3 @@ class Drawable(Protocol):
     """
 
     def draw(self, screen: pg.Surface) -> None: ...
-
-
-class GameObjectTracer:
-    """
-    Tracks the positions between a single object and a set of objects.
-    For example, you might want to track collisions between the player
-    and walls in the world.
-    """
-
-    # todo(tbeatham): Refactor into checking between multiple and multiple objects?
-    # split the screen into quadrants and check collisions between each object in
-    # a quadrant?
-
-    # src object is the object moving around in the world.
-    src: GameObject
-    # candidates object is the object that the src might collide with.
-    candidates: Iterable[GameObject]
-
-    def __init__(self, src: GameObject, candidates: Iterable[GameObject]):
-        self.src = src
-        self.candidates = candidates
-
-    def update(self):
-        """
-        Main update reactor. Checks whether objects overlap or not.
-        """
-        # todo(tbeatham): keep track of what objects are on the screen.
-        for candidate in self.candidates:
-            if self.src.get_world_rect().colliderect(candidate.get_world_rect()):
-                self.src.on_collide(candidate)
-                candidate.on_collide(self.src)

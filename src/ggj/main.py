@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from typing import cast
 
 import pygame as pg
 from ggj import camera as cam
@@ -9,7 +10,8 @@ from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import GrapplingHook, Player
 from ggj.camera import camera
-from ggj.game_object import GameObjectTracer, PhysicsBody
+from ggj.game_object import GameObject, PhysicsBody
+from ggj.collision import GameObjectTracer
 from ggj.world import SurfaceBlock, map_to_world_coords
 
 logging.basicConfig(
@@ -40,8 +42,8 @@ def main():
     surface_block_vectors = surface_blocks()
 
     # only render the 1/4 of the surface blocks
-    surface_block_vectors.sort(key=lambda b: b.x)
-    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors) // 2]
+    surface_block_vectors.sort(key=lambda b: (b.x, b.y))
+    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors)]
 
     blocks = [SurfaceBlock(v) for v in surface_block_vectors]
 
@@ -53,7 +55,7 @@ def main():
     object_group.add(player)
     camera.follow(player)
 
-    tracer = GameObjectTracer(player, blocks)
+    tracer = GameObjectTracer(player, cast(list[GameObject], blocks))
 
     physics_bodies: list[PhysicsBody] = [player]
 

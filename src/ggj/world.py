@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def map_to_world_coords(v: pg.Vector2) -> pg.Vector2:
-    """Convert a coordinate on the map (in pixels) to the world."""
+    """Convert a coordinate on the map (in map units) to the world."""
     return pg.Vector2(v.x * SURFACE_BLOCK_SIZE[0], v.y * SURFACE_BLOCK_SIZE[1])
 
 

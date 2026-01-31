@@ -88,7 +88,7 @@ class Camera(game_object.GameObject):
         return screen_rect
 
     def get_world_rect(self) -> pg.Rect:
-        return self.player_box
+        return screen_to_world_rect(pg.Rect(0, 0, *pg.display.get_window_size()))
 
     def follow(self, obj: game_object.GameObject):
         self.follow_object = obj
@@ -139,3 +139,9 @@ def screen_to_world_vector2(screen_vector: pg.Vector2) -> pg.Vector2:
         camera_port.x + (screen_vector.x / size_multiplier_x),
         camera_port.y + (screen_vector.y / size_multiplier_y),
     )
+
+
+def screen_to_world_rect(screen_rect: pg.Rect) -> pg.Rect:
+    pos = screen_to_world_vector2(pg.Vector2(screen_rect.x, screen_rect.y))
+    dims = screen_to_world_vector2(pg.Vector2(screen_rect.width, screen_rect.height))
+    return pg.Rect(*pos, *dims)
