@@ -9,8 +9,9 @@ from ggj.player import Player
 
 
 @lru_cache
-def load_star_image():
-    return pg.image.load(STARS_BACKGROUND_PATH).convert()
+def load_star_image() -> pg.Surface:
+    i = pg.image.load(STARS_BACKGROUND_PATH).convert()
+    return pygame.transform.scale_by(i, 1.8)
 
 
 def apply_star_tiles(
@@ -19,6 +20,7 @@ def apply_star_tiles(
     # TODO fix. This is a really bad function but works for now. The proper fix is to shrink parallax things.
 
     star_image = load_star_image()
+    star_image.get_rect()
     base_rect = star_image.get_rect()
 
     # roughly estimate what tile we need start  at, just x for now, 0.5 as tiles move half speed when zindex=3
@@ -26,9 +28,9 @@ def apply_star_tiles(
 
     # 2xs as tiles are squished together by parallax so compensate
     current_rect = star_image.get_rect()
-    for x in range(-3, 3):  # render 3 tiles around player
+    for x in range(-3, 5):  # render some tiles around player
         current_rect.x = base_rect.x + star_image.get_width() * (x + rough_tile_x) * 2
-        for y in range(-3, 3):
+        for y in range(-3, 5):
             current_rect.y = base_rect.y + star_image.get_height() * y * 2
             screen.blit(
                 star_image,
