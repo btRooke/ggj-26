@@ -85,14 +85,13 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._point_mass.add_force(force_multiplier * net_force)
 
         if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
-            world_pos_mouse = screen_to_world_vector2(pg.Vector2(mouse_down_pos))
+            world_pos_mouse = screen_to_world_vector2(pg.Vector2(*mouse_down_pos))
             distance = world_pos_mouse - self._point_mass.position
             spring_force = SPRING_CONSTANT * distance
             logger.debug(f"spring applying force {spring_force} distance {distance}")
             self._point_mass.add_force(spring_force)
 
         self._point_mass.apply_gravity()
-        # logger.debug(f"result force {self._point_mass._accumulative_force}")
         self._populate_rect()
 
     def get_world_rect(self) -> pg.Rect:
@@ -174,13 +173,9 @@ class GrapplingHook(Drawable):
 
         player_world_rect = self.player.get_world_rect()
         start_coords = camera.get_screen_rect(pg.Rect(*player_world_rect.center, 0, 0))
-        mouse_pos_world = screen_to_world_vector2(pg.Vector2(*mouse_pos))
-        end_coords = camera.get_screen_rect(
-            pg.Rect(mouse_pos_world.x, mouse_pos_world.y, 0, 0)
-        )
         pg.draw.line(
             screen,
             (255, 0, 0),
             (start_coords.x, start_coords.y),
-            (end_coords.x, end_coords.y),
+            mouse_pos,
         )
