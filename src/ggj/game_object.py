@@ -14,7 +14,7 @@ class PointMass:
     Represents a point mass that we can apploy physics to
     """
 
-    _position: pg.Vector2
+    position: pg.Vector2
     _velocity: pg.Vector2
     _accumulative_force: pg.Vector2
     _mass: float
@@ -25,7 +25,7 @@ class PointMass:
     def __init__(
         self, position: pg.Vector2, mass: float, clamp_speed: float = float("inf")
     ):
-        self._position = position
+        self.position = position
         self._mass = mass
         self._accumulative_force = pg.Vector2(0, 0)
         self._velocity = pg.Vector2(0, 0)
@@ -56,18 +56,11 @@ class PointMass:
         ):
             self._velocity = prev_velocity
 
-        self._position += self._velocity
+        self.position += self._velocity
         self._accumulative_force = pg.Vector2(0, 0)
-
-    def set_position_y(self, pos: float):
-        self._position.y = pos
 
     def reset_velocty(self):
         self._velocity = pg.Vector2()
-
-    @property
-    def position(self) -> Vector2:
-        return self._position
 
     @property
     def velocity(self) -> Vector2:

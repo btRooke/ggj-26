@@ -11,6 +11,11 @@ WALL_MASS = 1000
 logger = logging.getLogger(__name__)
 
 
+def map_to_world_coords(v: pg.Vector2) -> pg.Vector2:
+    """Convert a coordinate on the map (in pixels) to the world."""
+    return pg.Vector2(v.x * SURFACE_BLOCK_SIZE[0], v.y * SURFACE_BLOCK_SIZE[1])
+
+
 class SurfaceBlock(pg.sprite.Sprite, GameObject):
     _point_mass: PointMass
 

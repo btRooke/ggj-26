@@ -6,11 +6,10 @@ from ggj import camera as cam
 from ggj.map.importer import surface_blocks
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
-from ggj.player import Player, GrapplingHook
+from ggj.player import GrapplingHook, Player
 from ggj.camera import camera
 from ggj.game_object import GameObjectTracer, PhysicsBody
-from ggj.world import SurfaceBlock
-
+from ggj.world import SurfaceBlock, map_to_world_coords
 
 logging.basicConfig(
     filename="ggj.log",
@@ -37,20 +36,18 @@ def main():
 
     done = False
 
-
     surface_block_vectors = surface_blocks()
 
-    # only render the 1/4 of the surface blocks, prioritise LHS of map
+    # only render the 1/4 of the surface blocks
     surface_block_vectors.sort(key=lambda b: b.x)
-    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors) // 4]
+    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors) // 2]
 
     blocks = [SurfaceBlock(v) for v in surface_block_vectors]
 
     user_interface = UserInterface(screen)
     object_group: pg.sprite.Group = pg.sprite.Group()
 
-    player_init_pos = surface_block_vectors[0].copy()
-    player_init_pos.y -= 1
+    player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
     player = Player(player_init_pos)
     object_group.add(player)
     camera.follow(player)
