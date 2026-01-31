@@ -7,7 +7,9 @@ from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import Player, GrapplingHook
 from ggj.camera import camera
-import random
+from ggj.game_object import GameObjectTracer
+from ggj.world import SurfaceBlock
+
 
 logging.basicConfig(
     filename="ggj.log",
@@ -35,10 +37,15 @@ def main():
     done = False
 
     user_interface = UserInterface(screen)
-    player_group: pg.sprite.Group = pg.sprite.Group()
+    object_group: pg.sprite.Group = pg.sprite.Group()
     player = Player()
-    player_group.add(player)
+    object_group.add(player)
     camera.follow(player)
+
+    blocks = [SurfaceBlock(pg.Vector2(0, 500))]
+    tracer = GameObjectTracer(player, blocks)
+
+    object_group.add(*blocks)
 
     grapling_hook = GrapplingHook(player)
 
@@ -60,8 +67,9 @@ def main():
                 zindex=2,
             ),
         )
-        player_group.update()
-        player_group.draw(screen)
+        tracer.update()
+        object_group.update()
+        object_group.draw(screen)
         pg.draw.rect(
             screen,
             (0, 0, 255),

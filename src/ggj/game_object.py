@@ -1,6 +1,12 @@
-from typing import Protocol
+from __future__ import annotations
+from typing import Iterable, Protocol
 import pygame as pg
 from pygame.math import Vector2
+import logging
+
+GRAVITY = pg.Vector2(0, 10)
+
+logger = logging.getLogger(__name__)
 
 
 class PointMass:
@@ -14,22 +20,32 @@ class PointMass:
     _mass: float
     # todo(tbeatham): drag instead?
     _max_speed: float
+    _rigid: bool
 
     def __init__(
         self, position: pg.Vector2, mass: float, clamp_speed: float = float("inf")
     ):
         self._position = position
-        # todo(tbeatham) paarameterise this as part of the point mass
         self._mass = mass
         self._accumulative_force = pg.Vector2(0, 0)
         self._velocity = pg.Vector2(0, 0)
-        self._position = pg.Vector2(0, 0)
         self._max_speed = clamp_speed
+        self._rigid = False
 
     def add_force(self, force: pg.Vector2):
         self._accumulative_force += force
 
+    def apply_gravity(self):
+        self._accumulative_force += GRAVITY
+
+    def get_force(self) -> pg.Vector2:
+        return self._accumulative_force
+
     def integrate(self):
+        if self._rigid:
+            return
+
+        logger.debug(f"applying force {self._accumulative_force}")
         acceleration = self._accumulative_force / self._mass
 
         prev_velocity = self._velocity.copy()
@@ -44,6 +60,12 @@ class PointMass:
         self._position += self._velocity
         self._accumulative_force = pg.Vector2(0, 0)
 
+    def set_position_x(self, x_pos: float):
+        self._position.x = x_pos
+
+    def reset_velocty(self):
+        self._velocity = pg.Vector2()
+
     @property
     def position(self) -> Vector2:
         return self._position
@@ -56,6 +78,7 @@ class PointMass:
 class GameObject(Protocol):
     def update(self) -> None: ...
     def get_world_rect(self) -> pg.Rect: ...
+    def on_collide(self, other: GameObject) -> None: ...
 
 
 class Drawable(Protocol):
@@ -67,3 +90,34 @@ class Drawable(Protocol):
     """
 
     def draw(self, screen: pg.Surface) -> None: ...
+
+
+class GameObjectTracer:
+    """
+    Tracks the positions between a single object and a set of objects.
+    For example, you might want to track collisions between the player
+    and walls in the world.
+    """
+
+    # todo(tbeatham): Refactor into checking between multiple and multiple objects?
+    # split the screen into quadrants and check collisions between each object in
+    # a quadrant?
+
+    # src object is the object moving around in the world.
+    src: GameObject
+    # candidates object is the object that the src might collide with.
+    candidates: Iterable[GameObject]
+
+    def __init__(self, src: GameObject, candidates: Iterable[GameObject]):
+        self.src = src
+        self.candidates = candidates
+
+    def update(self):
+        """
+        Main update reactor. Checks whether objects overlap or not.
+        """
+        # todo(tbeatham): keep track of what objects are on the screen.
+        for candidate in self.candidates:
+            if self.src.get_world_rect().colliderect(candidate.get_world_rect()):
+                self.src.on_collide(candidate)
+                candidate.on_collide(self.src)
