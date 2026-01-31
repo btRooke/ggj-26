@@ -38,12 +38,12 @@ class Camera(game_object.GameObject):
     def __init__(self) -> None:
         self.player_box = pg.Rect(0, 0, *CAMERA_COLLIDE_BOUNDS)
 
-    def get_relative(self, position: pg.Vector2) -> pg.Vector2:
+    def _get_relative(self, position: pg.Vector2) -> pg.Vector2:
         """Draw an object relative to the camera's position"""
         return position - self.player_box.center
 
     def get_screen_rect(self, rect: pg.Rect) -> pg.Rect:
-        relative_cam = self.get_relative(pg.Vector2(rect.x, rect.y))
+        relative_cam = self._get_relative(pg.Vector2(rect.x, rect.y))
         screen_rect = world_to_screen_rect(
             pg.Rect((relative_cam.x, relative_cam.y, rect.width, rect.height))
         )
