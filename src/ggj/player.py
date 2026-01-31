@@ -12,8 +12,10 @@ PLAYER_SIZE = 50
 PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
-SPRING_CONSTANT = 0.05
-SURFACE_IMPULSE = 75
+SPRING_CONSTANT = 0.1
+SURFACE_IMPULSE = 2000
+
+PLAYER_COLLISION_BUFFER = 20
 
 
 class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
@@ -68,6 +70,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             PLAYER_SIZE,
         )
 
+    def _player_movement_action(self) -> bool:
+        return key_manager.get_mouse_down_pos() is not None
+
     def on_collide(self, other: GameObject) -> None:
         player_world_bounds = self.get_world_rect()
 
@@ -76,15 +81,40 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
             other_world_bounds = other.get_world_rect()
 
-            if player_world_bounds.clipline(
-                other_world_bounds.topleft, other_world_bounds.topright
+            if other_world_bounds.clipline(
+                (player_world_bounds.centerx, player_world_bounds.y),
+                (player_world_bounds.centerx, player_world_bounds.bottom),
             ):
-                self._point_mass.make_rigid_y()
-                #self._point_mass.add_force(-self._point_mass.get_force())
-                self._point_mass.reset_velocty()
-            else:
-                impulse_force = -self._point_mass.get_force().normalize() * SURFACE_IMPULSE
-                self._point_mass.add_force(impulse_force)
+                # if play performing an action free the player so that it can move
+                self._point_mass.position.y = (
+                    other_world_bounds.y - PLAYER_COLLISION_BUFFER
+                )
+                if not self._player_movement_action():
+                    self._point_mass.reset_velocty()
+                    self._point_mass.add_force(
+                        pg.Vector2(0, -self._point_mass.get_force().y)
+                    )
+            if other_world_bounds.clipline(
+                (player_world_bounds.left, player_world_bounds.centery),
+                (player_world_bounds.right, player_world_bounds.centery),
+            ):
+                if (
+                    self._point_mass.get_force().x > 0
+                    and player_world_bounds.centerx < other_world_bounds.centerx
+                ):
+                    self._point_mass.reset_velocty()
+                    self._point_mass.add_force(
+                        pg.Vector2(-self._point_mass.get_force().x, 0)
+                    )
+                elif (
+                    self._point_mass.get_force().x < 0
+                    and player_world_bounds.centerx > other_world_bounds.centerx
+                ):
+                    if key_manager.get_mouse_down_pos() is None:
+                        self._point_mass.reset_velocty()
+                        self._point_mass.add_force(
+                            pg.Vector2(-self._point_mass.get_force().x, 0)
+                        )
 
     @property
     def point_mass(self) -> PointMass:
