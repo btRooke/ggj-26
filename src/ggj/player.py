@@ -13,9 +13,9 @@ PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
 SPRING_CONSTANT = 0.1
-SURFACE_IMPULSE = 2000
+SURFACE_IMPULSE = 300
 
-PLAYER_COLLISION_BUFFER = 20
+PLAYER_COLLISION_BUFFER = 2
 
 
 class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
@@ -77,23 +77,30 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         player_world_bounds = self.get_world_rect()
 
         if isinstance(other, SurfaceBlock):
-            logging.debug("collide with surface")
-
             other_world_bounds = other.get_world_rect()
 
             if other_world_bounds.clipline(
                 (player_world_bounds.centerx, player_world_bounds.y),
                 (player_world_bounds.centerx, player_world_bounds.bottom),
             ):
-                # if play performing an action free the player so that it can move
-                self._point_mass.position.y = (
-                    other_world_bounds.y - PLAYER_COLLISION_BUFFER
-                )
-                if not self._player_movement_action():
+                self._point_mass.position.y = other_world_bounds.top - (PLAYER_SIZE / 2)
+                if player_world_bounds.centery < other_world_bounds.centery:
+                    if (
+                        not self._player_movement_action()
+                        and self._point_mass.get_force().y > 0
+                    ):
+                        self._point_mass.reset_velocty()
+                        self._point_mass.add_force(
+                            pg.Vector2(0, -self._point_mass.get_force().y)
+                        )
+                else:
+                    impulse = SURFACE_IMPULSE * -self._point_mass.get_force()
+                    self._point_mass.add_force(impulse)
                     self._point_mass.reset_velocty()
-                    self._point_mass.add_force(
-                        pg.Vector2(0, -self._point_mass.get_force().y)
-                    )
+                    self._point_mass.position.y = (
+                        other_world_bounds.bottom + PLAYER_COLLISION_BUFFER
+                    ) + (PLAYER_SIZE / 2)
+
             if other_world_bounds.clipline(
                 (player_world_bounds.left, player_world_bounds.centery),
                 (player_world_bounds.right, player_world_bounds.centery),
@@ -110,11 +117,10 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                     self._point_mass.get_force().x < 0
                     and player_world_bounds.centerx > other_world_bounds.centerx
                 ):
-                    if key_manager.get_mouse_down_pos() is None:
-                        self._point_mass.reset_velocty()
-                        self._point_mass.add_force(
-                            pg.Vector2(-self._point_mass.get_force().x, 0)
-                        )
+                    self._point_mass.reset_velocty()
+                    self._point_mass.add_force(
+                        pg.Vector2(-self._point_mass.get_force().x, 0)
+                    )
 
     @property
     def point_mass(self) -> PointMass:
