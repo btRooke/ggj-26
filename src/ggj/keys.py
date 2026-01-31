@@ -32,6 +32,9 @@ class KeyManager:
             elif event.type == pg.MOUSEBUTTONDOWN:
                 logger.debug(f"mouse down at pos {pg.mouse.get_pos()}")
                 self._mouse_down_pos = pg.mouse.get_pos()
+            elif event.type == pg.MOUSEMOTION and self._mouse_down_pos is not None:
+                logger.debug(f"mouse move with down at pos {pg.mouse.get_pos()}")
+                self._mouse_down_pos = pg.mouse.get_pos()
             elif event.type == pg.MOUSEBUTTONUP:
                 logger.debug(f"mouse up at pos {pg.mouse.get_pos()}")
                 self._mouse_down_pos = None
