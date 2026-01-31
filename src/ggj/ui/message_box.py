@@ -5,7 +5,7 @@ class MessageBox(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.font = pygame.font.Font(pygame.font.match_font("monospace"), size=17)
+        self.font = pygame.font.Font(pygame.font.match_font("monospace"), size=15)
 
         # sprites must have image + rect attributes
 

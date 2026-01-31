@@ -33,7 +33,7 @@ def main():
 
     done = False
 
-    user_interface = UserInterface()
+    user_interface = UserInterface(screen)
     player_group: pg.sprite.Group = pg.sprite.Group()
     player = Player()
     player_group.add(player)

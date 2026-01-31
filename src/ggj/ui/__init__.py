@@ -10,14 +10,23 @@ logger = logging.getLogger(__name__)
 
 
 class UserInterface(pygame.sprite.Group):
-    def __init__(self):
+    def __init__(self, parent: pygame.surface.Surface):
         super().__init__()
+
+        self.parent = parent
 
         self.stopped = threading.Event()
 
         self.message_box = MessageBox()
         self.message_box.add(self)
-        self.message_box.add_message("hello from the girlfriend")
+        self.message_box.rect.x = (
+            parent.get_rect().width - self.message_box.rect.width - 10
+        )
+        self.message_box.rect.y = (
+            parent.get_rect().height - self.message_box.rect.height - 10
+        )
+
+        # thread to periodically add some messages to the box
 
         self.message_adding_thread = Thread(target=self.message_adding_loop)
         self.message_adding_thread.start()
