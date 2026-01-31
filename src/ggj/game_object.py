@@ -16,14 +16,16 @@ class PointMass:
     # todo(tbeatham): drag instead?
     _max_speed: float
 
-    def __init__(self, position: pg.Vector2):
+    def __init__(
+        self, position: pg.Vector2, mass: float, clamp_speed: float = float("inf")
+    ):
         self._position = position
         # todo(tbeatham) paarameterise this as part of the point mass
-        self._mass = 10.0
+        self._mass = mass
         self._accumulative_force = pg.Vector2(0, 0)
         self._velocity = pg.Vector2(0, 0)
         self._position = pg.Vector2(0, 0)
-        self._max_speed = float("inf")
+        self._max_speed = clamp_speed
 
     def add_force(self, force: pg.Vector2):
         self._accumulative_force += force
@@ -50,9 +52,6 @@ class PointMass:
     @property
     def velocity(self) -> Vector2:
         return self._velocity
-
-    def clamp_speed(self, speed: float):
-        self._max_speed = speed
 
 
 class GameObject(Protocol):

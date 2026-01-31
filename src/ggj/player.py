@@ -4,7 +4,8 @@ from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PointMass
 
 PLAYER_SIZE = 50
-MAX_SPEED = 5
+PLAYER_MAX_SPEED = 5
+PLAYER_MASS = 10
 
 
 class Player(pg.sprite.Sprite, GameObject):
@@ -18,8 +19,9 @@ class Player(pg.sprite.Sprite, GameObject):
         self.image = pg.Surface((PLAYER_SIZE, PLAYER_SIZE))
         self.image.fill(pg.Color(255, 0, 0, 0))
         self.rect = self.image.get_rect()
-        self._point_mass = PointMass(pg.Vector2(0, 0))
-        self._point_mass.clamp_speed(MAX_SPEED)
+        self._point_mass = PointMass(
+            pg.Vector2(0, 0), PLAYER_MASS, clamp_speed=PLAYER_MAX_SPEED
+        )
         self._populate_rect()
 
     def _populate_rect(self):
