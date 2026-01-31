@@ -7,6 +7,7 @@ from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import Player, GrapplingHook
 from ggj.camera import camera
+import random
 
 logging.basicConfig(
     filename="ggj.log",
@@ -51,20 +52,26 @@ def main():
             continue
 
         screen.fill((255, 0, 255))
-        player_group.update()
         pg.draw.rect(
             screen,
-            (0, 255, 0),
-            camera.get_screen_rect(camera.get_world_rect()),
+            (0, 125, 255),
+            camera.get_screen_rect(
+                pg.Rect(80, 80, 200, 200),
+                zindex=2,
+            ),
         )
+        player_group.update()
+        player_group.draw(screen)
         pg.draw.rect(
             screen,
             (0, 0, 255),
-            camera.get_screen_rect(pg.Rect(20, 20, 20, 20)),
+            camera.get_screen_rect(
+                pg.Rect(80, 80, 200, 200),
+                zindex=-1,
+            ),
         )
         camera.update()
         grapling_hook.draw(screen)
-        player_group.draw(screen)
         user_interface.draw(screen)
         pg.display.flip()
         clock.tick(FPS)

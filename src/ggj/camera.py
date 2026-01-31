@@ -1,6 +1,8 @@
 import pygame as pg
-from typing import Optional
+from typing import Optional, cast
 import logging
+
+from pygame.math import Vector2
 
 from ggj import game_object
 
@@ -28,6 +30,16 @@ def world_to_screen_rect(world_rect: pg.Rect) -> pg.Rect:
 # Viewport that the camera can collide with
 CAMERA_COLLIDE_BOUNDS = (300, 300)
 
+DEFAULT_Z_INDEX = 1
+
+PARALLAX_LAYERS: dict[int, pg.Vector2] = {
+    -1: pg.Vector2(2, 2),
+    0: pg.Vector2(1, 1),
+    1: pg.Vector2(0.75, 0.75),
+    2: pg.Vector2(0.5, 0.5),
+    3: pg.Vector2(0.2, 0.2),
+}
+
 
 class Camera(game_object.GameObject):
     # Bounding box to follow the object being followed.
@@ -38,12 +50,33 @@ class Camera(game_object.GameObject):
     def __init__(self) -> None:
         self.player_box = pg.Rect(0, 0, *CAMERA_COLLIDE_BOUNDS)
 
-    def _get_relative(self, position: pg.Vector2) -> pg.Vector2:
-        """Draw an object relative to the camera's position"""
-        return position - self.player_box.center
+    def _get_relative(self, position: pg.Vector3) -> pg.Vector2:
+        """
+        Get object coordinates relative to the camera's position
 
-    def get_screen_rect(self, rect: pg.Rect) -> pg.Rect:
-        relative_cam = self._get_relative(pg.Vector2(rect.x, rect.y))
+        Args:
+            position: The (x,y,z) coordinates of the character to get relative.
+                to the camera.
+        """
+        # zindex 1 should be at index 1 in the
+        if position.z not in PARALLAX_LAYERS:
+            raise ValueError(f"parallax index {position.z} is not supported")
+
+        pos_vec2 = pg.Vector2(position.x, position.y) - self.player_box.center
+        return pos_vec2.elementwise() * PARALLAX_LAYERS[cast(int, position.z)]
+
+    def get_screen_rect(self, rect: pg.Rect, zindex=1) -> pg.Rect:
+        """
+        Used to draw a rect in the game to the screen. The rect this
+        is returned is a position on the game screen.
+
+        Args:
+            rect: The rectangle in world coordinates.
+            zindex: The zindex in which the object exists. Lower values means
+                an object is closer to the screen. Higher values means an
+                object is further away.
+        """
+        relative_cam = self._get_relative(pg.Vector3(rect.x, rect.y, zindex))
         screen_rect = world_to_screen_rect(
             pg.Rect((relative_cam.x, relative_cam.y, rect.width, rect.height))
         )
