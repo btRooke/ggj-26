@@ -3,7 +3,7 @@ from ggj.camera import camera
 import pygame as pg
 import logging
 
-SURFACE_BLOCK_SIZE = (1, 1)
+SURFACE_BLOCK_SIZE = (10, 10)
 COLOR = pg.Color(255, 125, 0)
 
 WALL_MASS = 1000
@@ -31,8 +31,10 @@ class SurfaceBlock(pg.sprite.Sprite, GameObject):
 
     def get_world_rect(self) -> pg.Rect:
         return pg.Rect(
-            self._point_mass.position.x - (SURFACE_BLOCK_SIZE[0] / 2),
-            self._point_mass.position.y - (SURFACE_BLOCK_SIZE[1] / 2),
+            self._point_mass.position.x * SURFACE_BLOCK_SIZE[0]
+            - (SURFACE_BLOCK_SIZE[0] / 2),
+            self._point_mass.position.y * SURFACE_BLOCK_SIZE[1]
+            - (SURFACE_BLOCK_SIZE[1] / 2),
             *SURFACE_BLOCK_SIZE,
         )
 
