@@ -3,6 +3,7 @@ import subprocess
 
 import pygame as pg
 from ggj import camera as cam
+from ggj.background import apply_star_tiles
 from ggj.map.importer import surface_blocks
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
@@ -13,7 +14,7 @@ from ggj.world import SurfaceBlock, map_to_world_coords
 
 logging.basicConfig(
     filename="ggj.log",
-    filemode="a",
+    filemode="w",
     format="%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.DEBUG,
@@ -47,7 +48,7 @@ def main():
     user_interface = UserInterface(screen)
     object_group: pg.sprite.Group = pg.sprite.Group()
 
-    player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
+    player_init_pos = map_to_world_coords(pg.Vector2(0, 0))  # pg.Vector2(750, 60))
     player = Player(player_init_pos)
     object_group.add(player)
     camera.follow(player)
@@ -70,14 +71,7 @@ def main():
             continue
 
         screen.fill((255, 0, 255))
-        pg.draw.rect(
-            screen,
-            (0, 125, 255),
-            camera.get_screen_rect(
-                pg.Rect(80, 80, 200, 200),
-                zindex=2,
-            ),
-        )
+        apply_star_tiles(screen, camera, player)
         object_group.update()
         tracer.update()
         for body in physics_bodies:
@@ -88,7 +82,7 @@ def main():
             (0, 0, 255),
             camera.get_screen_rect(
                 pg.Rect(80, 80, 200, 200),
-                zindex=-1,
+                zindex=2,
             ),
         )
         camera.update()
