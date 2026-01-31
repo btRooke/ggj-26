@@ -11,6 +11,7 @@ WORLD_PNG_PATH = Path(__file__).parent / "world.png"
 
 @lru_cache
 def world_rgb_array():
+    """Load world RGB array."""
     im = Image.open(WORLD_PNG_PATH)
 
     assert im.format == "PNG"
@@ -21,6 +22,7 @@ def world_rgb_array():
 
 @lru_cache
 def world_array():
+    """Load world array, just 2D array of uint8s."""
     rgb_array = world_rgb_array()
     r_array = np.zeros(list(rgb_array.shape)[:2], dtype=np.uint8)
 
@@ -33,6 +35,7 @@ def world_array():
     return r_array
 
 
+@lru_cache
 def surface_blocks() -> list[pg.Vector2]:
     w_array = world_array()
 
