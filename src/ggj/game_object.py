@@ -60,8 +60,8 @@ class PointMass:
         self._position += self._velocity
         self._accumulative_force = pg.Vector2(0, 0)
 
-    def set_position_x(self, x_pos: float):
-        self._position.x = x_pos
+    def set_position_y(self, pos: float):
+        self._position.y = pos
 
     def reset_velocty(self):
         self._velocity = pg.Vector2()
@@ -79,6 +79,11 @@ class GameObject(Protocol):
     def update(self) -> None: ...
     def get_world_rect(self) -> pg.Rect: ...
     def on_collide(self, other: GameObject) -> None: ...
+
+
+class PhysicsBody(Protocol):
+    @property
+    def point_mass(self) -> PointMass: ...
 
 
 class Drawable(Protocol):

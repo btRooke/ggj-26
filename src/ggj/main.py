@@ -7,7 +7,7 @@ from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import Player, GrapplingHook
 from ggj.camera import camera
-from ggj.game_object import GameObjectTracer
+from ggj.game_object import GameObjectTracer, PhysicsBody
 from ggj.world import SurfaceBlock
 
 
@@ -42,8 +42,17 @@ def main():
     object_group.add(player)
     camera.follow(player)
 
-    blocks = [SurfaceBlock(pg.Vector2(0, 500))]
+    blocks = [
+        SurfaceBlock(pg.Vector2(0, 500)),
+        SurfaceBlock(
+            pg.Vector2(
+                500,
+            )
+        ),
+    ]
     tracer = GameObjectTracer(player, blocks)
+
+    physics_bodies: list[PhysicsBody] = [player]
 
     object_group.add(*blocks)
 
@@ -67,8 +76,10 @@ def main():
                 zindex=2,
             ),
         )
-        tracer.update()
         object_group.update()
+        tracer.update()
+        for body in physics_bodies:
+            body.point_mass.integrate()
         object_group.draw(screen)
         pg.draw.rect(
             screen,
