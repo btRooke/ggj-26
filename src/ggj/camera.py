@@ -34,14 +34,9 @@ class Camera(game_object.GameObject):
     # This is defined in world coordinates.
     player_box: pg.Rect
     follow_object: Optional[game_object.GameObject]
-    screen: Optional[pg.Surface]
 
     def __init__(self) -> None:
         self.player_box = pg.Rect(0, 0, *CAMERA_COLLIDE_BOUNDS)
-        self.screen = None
-
-    def set_screen(self, screen: pg.Surface) -> None:
-        self.screen = screen
 
     def get_relative(self, position: pg.Vector2) -> pg.Vector2:
         """Draw an object relative to the camera's position"""
@@ -53,8 +48,7 @@ class Camera(game_object.GameObject):
             pg.Rect((relative_cam.x, relative_cam.y, rect.width, rect.height))
         )
         # center of the camera represents the center of the screen.
-        assert self.screen
-        width, height = self.screen.get_size()
+        width, height = pg.display.get_window_size()
         screen_rect.center = (
             screen_rect.center[0] + round(width / 2.0),
             screen_rect.center[1] + round(height / 2.0),
@@ -87,8 +81,7 @@ class Camera(game_object.GameObject):
                 self.player_box.top = follow_rect.center[1]
 
     def get_view_port(self) -> pg.Rect:
-        assert self.screen
-        dimensions = world_to_screen_vector2(pg.Vector2(*self.screen.get_size()))
+        dimensions = world_to_screen_vector2(pg.Vector2(*pg.display.get_window_size()))
         pos = world_to_screen_vector2(
             pg.Vector2(
                 self.player_box.center[0] - (dimensions.x / 2),

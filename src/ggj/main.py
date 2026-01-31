@@ -33,7 +33,6 @@ def main():
 
     done = False
 
-    camera.set_screen(screen)
     user_interface = UserInterface()
     player_group: pg.sprite.Group = pg.sprite.Group()
     player = Player()
