@@ -32,10 +32,11 @@ DEFAULT_Z_INDEX = 1
 
 PARALLAX_LAYERS: dict[int, pg.Vector2] = {
     -1: pg.Vector2(2, 2),
-    0: pg.Vector2(1, 1),
-    1: pg.Vector2(0.75, 0.75),
-    2: pg.Vector2(0.5, 0.5),
-    3: pg.Vector2(0.2, 0.2),
+    0: pg.Vector2(1.5, 1.5),
+    1: pg.Vector2(1, 1),
+    2: pg.Vector2(0.75, 0.75),
+    3: pg.Vector2(0.5, 0.5),
+    4: pg.Vector2(0.2, 0.2),
 }
 
 

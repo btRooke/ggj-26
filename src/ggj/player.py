@@ -9,10 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 PLAYER_SIZE = 50
-PLAYER_MAX_SPEED = 25
+PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
-SPRING_CONSTANT = 0.001
+SPRING_CONSTANT = 0.05
 SURFACE_IMPULSE = 75
 
 
@@ -47,17 +47,17 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             net_force += pg.Vector2(-1, 0)
         if key_manager.is_key_down(key_map.player_right):
             net_force += pg.Vector2(1, 0)
+        self._point_mass.add_force(force_multiplier * net_force)
 
         if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
             world_pos_mouse = screen_to_world_vector2(pg.Vector2(mouse_down_pos))
             distance = world_pos_mouse - self._point_mass.position
             spring_force = SPRING_CONSTANT * distance
-            logger.debug(f"applying force {spring_force}")
+            logger.debug(f"spring applying force {spring_force} distance {distance}")
             self._point_mass.add_force(spring_force)
 
         self._point_mass.apply_gravity()
-
-        self._point_mass.add_force(force_multiplier * net_force)
+        logger.debug(f"result force {self._point_mass._accumulative_force}")
         self._populate_rect()
 
     def get_world_rect(self) -> pg.Rect:
@@ -70,24 +70,10 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
     def on_collide(self, other: GameObject) -> None:
         if isinstance(other, SurfaceBlock):
-            player_rect = self.get_world_rect()
-            other_rect = other.get_world_rect()
             logging.debug("collide with surface")
 
-            if player_rect.clipline(
-                pg.Vector2(*other_rect.topleft), pg.Vector2(*other_rect.topright)
-            ):
-                # equal and opposite reaction
-                self._point_mass.add_force(
-                    pg.Vector2(0, -self._point_mass.get_force().y)
-                )
-                self._point_mass.reset_velocty()
-                self._point_mass.set_position_y(other_rect.top - (PLAYER_SIZE * 0.5))
-            else:
-                impulse_force = (
-                    -self._point_mass.get_force().normalize() * SURFACE_IMPULSE
-                )
-                self._point_mass.add_force(impulse_force)
+            impulse_force = -self._point_mass.get_force().normalize() * SURFACE_IMPULSE
+            self._point_mass.add_force(impulse_force)
 
     @property
     def point_mass(self) -> PointMass:
@@ -105,7 +91,6 @@ class GrapplingHook(Drawable):
             return
 
         player_world_rect = self.player.get_world_rect()
-
         start_coords = camera.get_screen_rect(pg.Rect(*player_world_rect.center, 0, 0))
         mouse_pos_world = screen_to_world_vector2(pg.Vector2(*mouse_pos))
         end_coords = camera.get_screen_rect(

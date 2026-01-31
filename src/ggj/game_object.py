@@ -52,10 +52,10 @@ class PointMass:
         self._velocity += acceleration
 
         # clamp the velocity if at max speed
-        if self._max_speed != float("inf") and self._velocity.magnitude() > abs(
-            self._max_speed
-        ):
-            self._velocity = prev_velocity
+        # if self._max_speed != float("inf") and self._velocity.magnitude() > abs(
+        #    self._max_speed
+        # ):
+        #    self._velocity = prev_velocity
 
         self._position += self._velocity
         self._accumulative_force = pg.Vector2(0, 0)
