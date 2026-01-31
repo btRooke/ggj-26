@@ -1,7 +1,6 @@
 from typing import Protocol
 import pygame as pg
 from pygame.math import Vector2
-from typing import cast
 
 
 class PointMass:
@@ -57,3 +56,14 @@ class PointMass:
 class GameObject(Protocol):
     def update(self) -> None: ...
     def get_world_rect(self) -> pg.Rect: ...
+
+
+class Drawable(Protocol):
+    """
+    Represents something in the world
+    that requires a draw. This is different
+    from a sprite as it may not necessarily be an
+    image.
+    """
+
+    def draw(self, screen: pg.Surface) -> None: ...

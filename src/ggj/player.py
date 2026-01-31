@@ -1,7 +1,7 @@
 import pygame as pg
-from ggj.camera import camera, screen_to_world_vector2
+from ggj.camera import camera, screen_to_world_vector2, world_to_screen_vector2
 from ggj.keys import key_manager, key_map
-from ggj.game_object import GameObject, PointMass
+from ggj.game_object import GameObject, PointMass, Drawable
 
 import logging
 
@@ -65,4 +65,29 @@ class Player(pg.sprite.Sprite, GameObject):
             self._point_mass.position.y,
             PLAYER_SIZE,
             PLAYER_SIZE,
+        )
+
+
+class GrapplingHook(Drawable):
+    player: Player
+
+    def __init__(self, player: Player) -> None:
+        self.player = player
+
+    def draw(self, screen: pg.Surface) -> None:
+        if (mouse_pos := key_manager.get_mouse_down_pos()) is None:
+            return
+
+        player_world_rect = self.player.get_world_rect()
+
+        start_coords = camera.get_screen_rect(pg.Rect(*player_world_rect.center, 0, 0))
+        mouse_pos_world = screen_to_world_vector2(pg.Vector2(*mouse_pos))
+        end_coords = camera.get_screen_rect(
+            pg.Rect(mouse_pos_world.x, mouse_pos_world.y, 0, 0)
+        )
+        pg.draw.line(
+            screen,
+            (255, 0, 0),
+            (start_coords.x, start_coords.y),
+            (end_coords.x, end_coords.y),
         )

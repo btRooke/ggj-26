@@ -5,7 +5,7 @@ import pygame as pg
 from ggj import camera as cam
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
-from ggj.player import Player
+from ggj.player import Player, GrapplingHook
 from ggj.camera import camera
 
 logging.basicConfig(
@@ -39,6 +39,8 @@ def main():
     player_group.add(player)
     camera.follow(player)
 
+    grapling_hook = GrapplingHook(player)
+
     logger.info("starting main loop")
 
     while not done:
@@ -61,6 +63,7 @@ def main():
             camera.get_screen_rect(pg.Rect(20, 20, 20, 20)),
         )
         camera.update()
+        grapling_hook.draw(screen)
         player_group.draw(screen)
         user_interface.draw(screen)
         pg.display.flip()
