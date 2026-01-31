@@ -28,9 +28,9 @@ def apply_star_tiles(
 
     # 2xs as tiles are squished together by parallax so compensate
     current_rect = star_image.get_rect()
-    for x in range(-3, 5):  # render some tiles around player
+    for x in range(-4, 5):  # render some tiles around player
         current_rect.x = base_rect.x + star_image.get_width() * (x + rough_tile_x) * 2
-        for y in range(-3, 5):
+        for y in range(-4, 5):
             current_rect.y = base_rect.y + star_image.get_height() * y * 2
             screen.blit(
                 star_image,
