@@ -3,7 +3,9 @@ name = "ggj"
 version = "0.1.0"
 dependencies = [
     "pygame",
-    "mypy"
+    "mypy",
+    "pillow",
+    "numpy"
 ]
 scripts = { ggj = "ggj.main:main" }
 

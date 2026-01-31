@@ -20,14 +20,14 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     _point_mass: PointMass
     image: pg.Surface
 
-    def __init__(self):
+    def __init__(self, start_pos: pg.Vector2):
         super().__init__()
 
         self.image = pg.Surface((PLAYER_SIZE, PLAYER_SIZE))
         self.image.fill(pg.Color(255, 0, 0, 0))
         self.rect = self.image.get_rect()
         self._point_mass = PointMass(
-            pg.Vector2(0, 0), PLAYER_MASS, clamp_speed=PLAYER_MAX_SPEED
+            start_pos, PLAYER_MASS, clamp_speed=PLAYER_MAX_SPEED
         )
         self._populate_rect()
 

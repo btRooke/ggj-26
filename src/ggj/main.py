@@ -3,6 +3,7 @@ import subprocess
 
 import pygame as pg
 from ggj import camera as cam
+from ggj.map.importer import surface_blocks
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import Player, GrapplingHook
@@ -36,20 +37,19 @@ def main():
 
     done = False
 
+    surface_block_vectors = surface_blocks()
+    print(surface_block_vectors)
+    blocks = [SurfaceBlock(v) for v in surface_block_vectors]
+
     user_interface = UserInterface(screen)
     object_group: pg.sprite.Group = pg.sprite.Group()
-    player = Player()
+
+    player_init_pos = surface_block_vectors[0].copy()
+    player_init_pos.y -= 1
+    player = Player(player_init_pos)
     object_group.add(player)
     camera.follow(player)
 
-    blocks = [
-        SurfaceBlock(pg.Vector2(0, 500)),
-        SurfaceBlock(
-            pg.Vector2(
-                500,
-            )
-        ),
-    ]
     tracer = GameObjectTracer(player, blocks)
 
     physics_bodies: list[PhysicsBody] = [player]
