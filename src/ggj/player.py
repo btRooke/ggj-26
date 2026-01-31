@@ -1,11 +1,17 @@
 import pygame as pg
-from ggj.camera import camera
+from ggj.camera import camera, screen_to_world_vector2
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PointMass
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 PLAYER_SIZE = 50
 PLAYER_MAX_SPEED = 5
 PLAYER_MASS = 10
+
+SPRING_CONSTANT = 0.001
 
 
 class Player(pg.sprite.Sprite, GameObject):
@@ -40,6 +46,13 @@ class Player(pg.sprite.Sprite, GameObject):
             net_force += pg.Vector2(-1, 0)
         if key_manager.is_key_down(key_map.player_right):
             net_force += pg.Vector2(1, 0)
+
+        if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
+            world_pos_mouse = screen_to_world_vector2(pg.Vector2(mouse_down_pos))
+            distance = world_pos_mouse - self._point_mass.position
+            spring_force = SPRING_CONSTANT * distance
+            logger.debug(f"applying force {spring_force}")
+            self._point_mass.add_force(spring_force)
 
         self._point_mass.add_force(force_multiplier * net_force)
         self._point_mass.integrate()
