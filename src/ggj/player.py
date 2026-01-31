@@ -59,7 +59,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self._point_mass.add_force(spring_force)
 
         self._point_mass.apply_gravity()
-        logger.debug(f"result force {self._point_mass._accumulative_force}")
+        # logger.debug(f"result force {self._point_mass._accumulative_force}")
         self._populate_rect()
 
     def get_world_rect(self) -> pg.Rect:
