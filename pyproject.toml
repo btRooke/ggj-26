@@ -11,6 +11,7 @@ scripts = { ggj = "ggj.main:main" }
 
 [build-system]
 requires = ["setuptools"]
+requires-python = ">=3.10"
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
