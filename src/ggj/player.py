@@ -4,6 +4,7 @@ from typing import cast
 
 from ggj.assets import SPRITE_SHEET_PATH
 from ggj.camera import camera, screen_to_world_vector2
+from ggj.constants import FPS
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
 from ggj.world import SurfaceBlock
@@ -24,12 +25,18 @@ SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
 SPRITE_SCALE = 4
 
+SPRITE_WALKING_BOB_PX = 8
+SPRITE_WALKING_FREQUENCY = (
+    7  # frequency of change of sprite, not whole animation unfortunately
+)
+
 JUMP_FORCE = pg.Vector2(0, -400)
 
 WALKING_FORCE_MULTIPLIER = 20
 
 FRICTION_MULTIPLIER = 2
 AIR_RESIST_MULTIPLIER = 0.25
+WALKING_SPRITE_COUNT = 2
 
 
 def _load_sprite_sheet() -> list[pg.Surface]:
@@ -46,9 +53,6 @@ def _load_sprite_sheet() -> list[pg.Surface]:
         sprite = pygame.surface.Surface((SPRITE_HEIGHT, SPRITE_WIDTH), pygame.SRCALPHA)
 
         # blit the correct part to it
-        pygame.transform.chop(
-            sheet, pygame.rect.Rect(i, 0, SPRITE_WIDTH, SPRITE_HEIGHT)
-        )
         rect = sprite.get_rect()
         rect.x = i
         sprite.blit(sheet, dest=(0, 0), area=rect)
@@ -56,6 +60,8 @@ def _load_sprite_sheet() -> list[pg.Surface]:
         # scale and append
         sprites.append(pygame.transform.scale_by(sprite, SPRITE_SCALE))
 
+    # push the second walking sprite down a bit
+    sprites[1].scroll(dy=SPRITE_WALKING_BOB_PX)
     return sprites
 
 
@@ -66,8 +72,16 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def __init__(self, start_pos: pg.Vector2):
         super().__init__()
 
-        self.sprites = _load_sprite_sheet()
-        self.image = self.sprites[0]
+        self._update_ticks_count = 0
+
+        # load sprites
+
+        all_sprites = _load_sprite_sheet()
+        self._walking_sprites = all_sprites[:WALKING_SPRITE_COUNT]
+        self.grappling_sprite = all_sprites[WALKING_SPRITE_COUNT]
+        self._current_walking_sprite_index = 0
+
+        self.image = self._walking_sprites[self._current_walking_sprite_index]
         self.rect = self.image.get_rect()
         self._point_mass = PointMass(
             start_pos,
@@ -104,7 +118,19 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                 return False
         return True
 
+    def _handle_animations(self):
+        self._update_ticks_count += 1
+
+        # animation
+
+        if self._update_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1)) == 0:
+            self._current_walking_sprite_index = (
+                self._current_walking_sprite_index + 1
+            ) % WALKING_SPRITE_COUNT
+            self.image = self._walking_sprites[self._current_walking_sprite_index]
+
     def update(self) -> None:
+        self._handle_animations()
         walking_force = pg.Vector2(0, 0)
 
         # check for collisions against surfaces

@@ -5,6 +5,7 @@ from typing import cast
 import pygame as pg
 from ggj import camera as cam
 from ggj.background import apply_star_tiles
+from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
@@ -22,8 +23,6 @@ logging.basicConfig(
     level=logging.DEBUG,
 )
 logger = logging.getLogger(__name__)
-
-FPS = 60
 
 
 def check_types() -> None:
