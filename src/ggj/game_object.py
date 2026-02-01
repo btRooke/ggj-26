@@ -20,9 +20,7 @@ class PointMass:
     _mass: float
     _rigid_multiplier: pg.Vector2
 
-    def __init__(
-        self, position: pg.Vector2, mass: float
-    ):
+    def __init__(self, position: pg.Vector2, mass: float):
         self.position = position
         self._mass = mass
         self._accumulative_force = pg.Vector2(0, 0)

@@ -17,9 +17,9 @@ PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
 SPRING_CONSTANT = 0.1
-SURFACE_IMPULSE = 300
+SURFACE_IMPULSE = 60
 
-PLAYER_COLLISION_BUFFER = 2
+PLAYER_COLLISION_BUFFER = 20
 
 SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
@@ -30,7 +30,7 @@ JUMP_FORCE = pg.Vector2(0, -200)
 WALKING_FORCE_MULTIPLIER = 20
 
 FRICTION_MULTIPLIER = 2
-AIR_RESIST_MULTIPLIER = .25
+AIR_RESIST_MULTIPLIER = 0.25
 
 
 def _load_sprite_sheet() -> list[pg.Surface]:
@@ -71,7 +71,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self.image = self.sprites[0]
         self.rect = self.image.get_rect()
         self._point_mass = PointMass(
-            start_pos, PLAYER_MASS,
+            start_pos,
+            PLAYER_MASS,
         )
         self._populate_rect()
 
@@ -131,6 +132,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def _is_player_jumping(self) -> bool:
         return key_manager.is_key_down(key_map.player_jump)
 
+    def _is_grappling_hook(self) -> bool:
+        return key_manager.get_mouse_down_pos() is not None
+
     def _player_movement_action(self) -> bool:
         return key_manager.get_mouse_down_pos() is not None or key_manager.is_key_down(
             key_map.player_jump
@@ -148,27 +152,16 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                     logging.debug(self._point_mass._accumulative_force)
                     self._point_mass.add_force(JUMP_FORCE)
                     logging.debug("player performed jump")
+                if self._is_grappling_hook():
+                    self._point_mass.position.y -= PLAYER_COLLISION_BUFFER
 
             else:
                 self._point_mass.position.y = other_world_bounds.top - (
                     player_world_bounds.height / 2
                 )
-                if (
-                    not self._player_movement_action()
-                    and self._point_mass.get_force().y > 0
-                ):
-                    self._point_mass.add_force(
-                        pg.Vector2(0, -self._point_mass.get_force().y)
-                    )
-                else:
-                    impulse = SURFACE_IMPULSE * -self._point_mass.get_force()
-                    self._point_mass.add_force(impulse)
-                    self._point_mass.reset_velocty()
-                    self._point_mass.position.y = (
-                        other_world_bounds.bottom
-                        + (player_world_bounds.height / 2)
-                        + PLAYER_COLLISION_BUFFER
-                    )
+                self._point_mass.add_force(
+                    pg.Vector2(0, -self._point_mass.get_force().y)
+                )
             friction_force = (
                 pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
             )
