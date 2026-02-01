@@ -11,6 +11,7 @@ Created by:
 - [Tim Beatham](https://github.com/tim-beatham/) (Programming)
 - [Billy Rooke](https://github.com/btRooke/) (Programming)
 
+More info on [itch.io page.](https://mr-interrupt.itch.io/stickney-lineman)
 ## Install and play
 
 Run:
