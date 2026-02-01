@@ -47,7 +47,7 @@ def main():
 
     # user interface
 
-    user_interface = UserInterface(screen)
+    user_interface = UserInterface(screen, surface_blocks().location_markers)
     object_group: pg.sprite.Group = pg.sprite.Group()
 
     # player stuff
@@ -93,6 +93,7 @@ def main():
         camera.update()
         grapling_hook.draw(screen)
         user_interface.draw(screen)
+        user_interface.update(player.point_mass.position)
         pg.display.flip()
         clock.tick(FPS)
 
