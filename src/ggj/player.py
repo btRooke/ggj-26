@@ -35,7 +35,7 @@ JUMP_FORCE = pg.Vector2(0, -400)
 WALKING_FORCE_MULTIPLIER = 20
 
 FRICTION_MULTIPLIER = 0.25
-AIR_RESIST_MULTIPLIER = 0.25
+AIR_RESIST_MULTIPLIER = .75
 WALKING_SPRITE_COUNT = 2
 
 
@@ -202,7 +202,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self._direction = FacingDirection.RIGHT
 
         air_resist_force = (
-            pg.Vector2(-self._point_mass.velocity.x, 0) * AIR_RESIST_MULTIPLIER
+            -self._point_mass.velocity * AIR_RESIST_MULTIPLIER
         )
         self._point_mass.add_force(air_resist_force)
         self._point_mass.add_force(WALKING_FORCE_MULTIPLIER * walking_force)
