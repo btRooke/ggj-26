@@ -21,7 +21,7 @@ PLAYER_MASS = 10
 
 SPRING_CONSTANT = 0.1
 
-PLAYER_COLLISION_BUFFER = 20
+PLAYER_COLLISION_BUFFER = 40
 
 SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
@@ -175,7 +175,6 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         collide_surfaces = []
         if surface_tracer is not None:
             collide_surfaces = surface_tracer.get_collisions(self)
-
         if (
             (
                 self._point_mass.velocity.x >= 0
@@ -211,7 +210,6 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
         self._point_mass.apply_gravity()
 
-        # check for collisions against surfaces
         for surface in collide_surfaces:
             self._on_collide_surface(cast(SurfaceBlock, surface))
 
@@ -221,8 +219,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         return pg.Rect(
             self._point_mass.position.x - (self.image.get_width() / 2),
             self._point_mass.position.y - (self.image.get_height() / 2),
-            self.image.get_width(),
-            self.image.get_height(),
+            self.image.get_width() - 20,
+            self.image.get_height() - 20,
         )
 
     def _is_moving(self):
@@ -247,6 +245,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def _on_collide_surface(self, surface: SurfaceBlock) -> None:
         player_world_bounds = self.get_world_rect()
         other_world_bounds = surface.get_world_rect()
+        world_bounds_vector = pg.Vector2(
+            other_world_bounds.centerx, other_world_bounds.centery
+        )
         if other_world_bounds.clipline(
             (player_world_bounds.centerx, player_world_bounds.y),
             (player_world_bounds.centerx, player_world_bounds.bottom),
@@ -257,10 +258,15 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                     self._point_mass.add_force(JUMP_FORCE)
                     logging.debug("player performed jump")
                 self._point_mass.position.y -= PLAYER_COLLISION_BUFFER
-            else:
+
+            displacement = (world_bounds_vector - self._point_mass.position).normalize()
+            force = self._point_mass.get_force().normalize()
+            dot_product = displacement * force
+            if dot_product > 0:
                 self._point_mass.add_force(
                     pg.Vector2(0, -self._point_mass.get_force().y)
                 )
+
             self._point_mass.position.y = other_world_bounds.top - (
                 player_world_bounds.height / 2
             )
