@@ -34,11 +34,6 @@ class UserInterface(pygame.sprite.Group):
         self.message_box.add(self)
         self.refresh_message_box_location()
 
-        # thread to periodically add some messages to the box
-
-        self.message_adding_thread = Thread(target=self.message_adding_loop)
-        # self.message_adding_thread.start()
-
         # location markers stuff
 
         self.location_markers: dict[str, list[tuple[int, int]]] = {
@@ -76,21 +71,9 @@ class UserInterface(pygame.sprite.Group):
         )
         self.message_box.rect.y = UI_PADDING_PX
 
-    def message_adding_loop(self):
-        logger.info("started msg adding thread")
-        i = 0
-        while not self.stopped.wait(1):
-            i += 1
-            self.message_box.add_message(
-                f"{i}ello from the girlfriend how is it going whatever is going on"
-            )
-
-        logger.info("stopped msg adding thread")
-
     def draw(self, *args, **kwargs):
         self.refresh_message_box_location()
         super().draw(*args, **kwargs)
 
     def shutdown(self):
         self.stopped.set()
-        self.message_adding_thread.join()
