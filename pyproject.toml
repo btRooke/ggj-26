@@ -9,14 +9,21 @@ dependencies = [
 ]
 scripts = { ggj = "ggj.main:main" }
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project.optional-dependencies]
 dev = [
     "ruff",
     "pyright",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.setuptools.package-data]
-ggj = ["*.png", "*.mp3"]
+"*" = ["*.png", "*.mp3"]
 
 [tool.mypy]
 check_untyped_defs = true
