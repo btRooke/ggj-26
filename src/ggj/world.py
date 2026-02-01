@@ -3,7 +3,7 @@ from ggj.camera import camera
 import pygame as pg
 import logging
 
-SURFACE_BLOCK_SIZE = (25, 25)
+SURFACE_BLOCK_SIZE = (48, 48)
 COLOR = pg.Color(255, 125, 0)
 
 WALL_MASS = 1000
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def map_to_world_coords(v: pg.Vector2) -> pg.Vector2:
-    """Convert a coordinate on the map (in pixels) to the world."""
+    """Convert a coordinate on the map (in map units) to the world."""
     return pg.Vector2(v.x * SURFACE_BLOCK_SIZE[0], v.y * SURFACE_BLOCK_SIZE[1])
 
 
@@ -42,6 +42,3 @@ class SurfaceBlock(pg.sprite.Sprite, GameObject):
             - (SURFACE_BLOCK_SIZE[1] / 2),
             *SURFACE_BLOCK_SIZE,
         )
-
-    def on_collide(self, other: GameObject) -> None:
-        pass

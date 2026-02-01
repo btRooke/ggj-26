@@ -3,15 +3,45 @@ from functools import lru_cache
 import pygame
 import pygame as pg
 
-from ggj.assets import STARS_BACKGROUND_PATH
+from ggj.assets import STARS_BACKGROUND_PATH, MARS_PATH
 from ggj.camera import Camera
 from ggj.player import Player
+
+init_mars_pos = None
 
 
 @lru_cache
 def load_star_image() -> pg.Surface:
     i = pg.image.load(STARS_BACKGROUND_PATH).convert()
     return pygame.transform.scale_by(i, 1.8)
+
+
+@lru_cache
+def load_mars_image() -> pg.Surface:
+    i = pg.image.load(MARS_PATH).convert_alpha()
+    i = pygame.transform.scale_by(i, 4)
+    i = pygame.transform.flip(i, flip_y=True, flip_x=False)
+    return i
+
+
+def apply_mars(screen: pygame.surface.Surface, camera: Camera, player: Player):
+    mars = load_mars_image()
+
+    global init_mars_pos
+
+    if init_mars_pos is None:
+        mars_rect = mars.get_rect()
+        mars_rect.x = int(player.point_mass.position.x - mars.get_width() / 2)
+        mars_rect.y += int(mars.get_height() * 1.5)
+        init_mars_pos = mars_rect
+
+    screen.blit(
+        mars,
+        camera.get_screen_rect(
+            init_mars_pos,
+            zindex=2,
+        ),
+    )
 
 
 def apply_star_tiles(
@@ -28,9 +58,9 @@ def apply_star_tiles(
 
     # 2xs as tiles are squished together by parallax so compensate
     current_rect = star_image.get_rect()
-    for x in range(-4, 5):  # render some tiles around player
+    for x in range(-8, 10):  # render some tiles around player
         current_rect.x = base_rect.x + star_image.get_width() * (x + rough_tile_x) * 2
-        for y in range(-4, 5):
+        for y in range(-8, 10):
             current_rect.y = base_rect.y + star_image.get_height() * y * 2
             screen.blit(
                 star_image,

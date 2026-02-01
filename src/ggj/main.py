@@ -1,15 +1,18 @@
 import logging
 import subprocess
+from typing import cast
 
 import pygame as pg
 from ggj import camera as cam
-from ggj.background import apply_star_tiles
+from ggj.background import apply_star_tiles, apply_mars
+from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import GrapplingHook, Player
 from ggj.camera import camera
-from ggj.game_object import GameObjectTracer, PhysicsBody
+from ggj.game_object import GameObject, PhysicsBody
+from ggj.collision import GameObjectTracer, collision_object_manager
 from ggj.world import SurfaceBlock, map_to_world_coords
 
 logging.basicConfig(
@@ -20,8 +23,6 @@ logging.basicConfig(
     level=logging.DEBUG,
 )
 logger = logging.getLogger(__name__)
-
-FPS = 60
 
 
 def check_types() -> None:
@@ -40,20 +41,21 @@ def main():
     surface_block_vectors = surface_blocks()
 
     # only render the 1/4 of the surface blocks
-    surface_block_vectors.sort(key=lambda b: b.x)
-    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors) // 2]
+    surface_block_vectors.sort(key=lambda b: (b.x, b.y))
+    surface_block_vectors = surface_block_vectors[: len(surface_block_vectors)]
 
     blocks = [SurfaceBlock(v) for v in surface_block_vectors]
 
     user_interface = UserInterface(screen)
     object_group: pg.sprite.Group = pg.sprite.Group()
 
-    player_init_pos = map_to_world_coords(pg.Vector2(0, 0))  # pg.Vector2(750, 60))
+    player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
     player = Player(player_init_pos)
     object_group.add(player)
     camera.follow(player)
 
-    tracer = GameObjectTracer(player, blocks)
+    tracer = GameObjectTracer(cast(list[GameObject], blocks))
+    collision_object_manager.register(SurfaceBlock, tracer)
 
     physics_bodies: list[PhysicsBody] = [player]
 
@@ -72,8 +74,8 @@ def main():
 
         screen.fill((255, 0, 255))
         apply_star_tiles(screen, camera, player)
+        apply_mars(screen, camera, player)
         object_group.update()
-        tracer.update()
         for body in physics_bodies:
             body.point_mass.integrate()
         object_group.draw(screen)
