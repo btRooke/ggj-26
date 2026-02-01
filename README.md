@@ -1,6 +1,11 @@
 # Stickney Lineman
 
-## Created by
+## About
+
+Built in < 48 hours for the 
+[Global Game Jam 2026 in Edinburgh](https://itch.io/jam/edjam26/entries).
+
+Created by:
 
 - [Jo Affleck](https://github.com/jo-affleck/) (Art)
 - [Tim Beatham](https://github.com/tim-beatham/) (Programming)
