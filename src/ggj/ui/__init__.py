@@ -33,9 +33,7 @@ class UserInterface(pygame.sprite.Group):
         self.message_box.rect.x = (
             self.parent.get_rect().width - self.message_box.rect.width - UI_PADDING_PX
         )
-        self.message_box.rect.y = (
-            self.parent.get_rect().height - self.message_box.rect.height - UI_PADDING_PX
-        )
+        self.message_box.rect.y = UI_PADDING_PX
 
     def message_adding_loop(self):
         logger.info("started msg adding thread")

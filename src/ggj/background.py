@@ -20,7 +20,6 @@ def load_star_image() -> pg.Surface:
 def load_mars_image() -> pg.Surface:
     i = pg.image.load(MARS_PATH).convert_alpha()
     i = pygame.transform.scale_by(i, 4)
-    i = pygame.transform.flip(i, flip_y=True, flip_x=False)
     return i
 
 
