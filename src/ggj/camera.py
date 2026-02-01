@@ -9,14 +9,6 @@ logger = logging.getLogger(__name__)
 BASE_RESOLUTION = (1280, 720)
 
 
-def world_to_screen_vector2(world_vector: pg.Vector2) -> pg.Vector2:
-    return world_vector
-
-
-def world_to_screen_rect(world_rect: pg.Rect) -> pg.Rect:
-    return world_rect
-
-
 # Viewport that the camera can collide with
 CAMERA_COLLIDE_BOUNDS = (300, 300)
 
@@ -67,17 +59,17 @@ class Camera(game_object.GameObject):
                 object is further away.
         """
         relative_cam = self._get_relative(pg.Vector3(rect.x, rect.y, zindex))
-        screen_rect = world_to_screen_rect(
-            pg.Rect((relative_cam.x, relative_cam.y, rect.width, rect.height))
+        relative_rect = pg.Rect(
+            (relative_cam.x, relative_cam.y, rect.width, rect.height)
         )
         # center of the camera represents the center of the screen.
         window = pg.display.Info()
         width, height = (window.current_w, window.current_h)
-        screen_rect.center = (
-            screen_rect.center[0] + round(width / 2.0),
-            screen_rect.center[1] + round(height / 2.0),
+        relative_rect.center = (
+            relative_rect.center[0] + round(width / 2.0),
+            relative_rect.center[1] + round(height / 2.0),
         )
-        return screen_rect
+        return relative_rect
 
     def get_world_rect(self) -> pg.Rect:
         window = pg.display.Info()
@@ -110,9 +102,6 @@ class Camera(game_object.GameObject):
         top_left = self.player_box.centerx - (window.current_w / 2)
         top_right = self.player_box.centery - (window.current_h / 2)
         return pg.Rect(top_left, top_right, window.current_w, window.current_h)
-
-    def on_collide(self, other: game_object.GameObject) -> None:
-        pass
 
 
 camera = Camera()

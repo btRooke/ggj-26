@@ -42,6 +42,3 @@ class SurfaceBlock(pg.sprite.Sprite, GameObject):
             - (SURFACE_BLOCK_SIZE[1] / 2),
             *SURFACE_BLOCK_SIZE,
         )
-
-    def on_collide(self, other: GameObject) -> None:
-        pass

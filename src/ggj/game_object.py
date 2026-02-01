@@ -11,25 +11,22 @@ logger = logging.getLogger(__name__)
 
 class PointMass:
     """
-    Represents a point mass that we can apploy physics to
+    Represents a point mass that we can apply physics to
     """
 
     position: pg.Vector2
     _velocity: pg.Vector2
     _accumulative_force: pg.Vector2
     _mass: float
-    # todo(tbeatham): drag instead?
-    _max_speed: float
     _rigid_multiplier: pg.Vector2
 
     def __init__(
-        self, position: pg.Vector2, mass: float, clamp_speed: float = float("inf")
+        self, position: pg.Vector2, mass: float
     ):
         self.position = position
         self._mass = mass
         self._accumulative_force = pg.Vector2(0, 0)
         self._velocity = pg.Vector2(0, 0)
-        self._max_speed = clamp_speed
         self._rigid_multiplier = pg.Vector2(1, 1)
 
     def add_force(self, force: pg.Vector2):
@@ -47,14 +44,7 @@ class PointMass:
             self._accumulative_force.elementwise() * self._rigid_multiplier
         )
         acceleration = self._accumulative_force / self._mass
-        prev_velocity = self._velocity.copy()
         self._velocity += acceleration
-
-        # clamp the velocity if at max speed
-        if self._max_speed != float("inf") and self._velocity.magnitude() > abs(
-            self._max_speed
-        ):
-            self._velocity = prev_velocity
 
         self.position += self._velocity
         self._accumulative_force = pg.Vector2(0, 0)
@@ -74,7 +64,6 @@ class PointMass:
 class GameObject(Protocol):
     def update(self) -> None: ...
     def get_world_rect(self) -> pg.Rect: ...
-    def on_collide(self, other: GameObject) -> None: ...
 
 
 class PhysicsBody(Protocol):

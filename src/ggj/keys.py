@@ -58,12 +58,14 @@ class KeyMaps:
     _player_right: int
     _player_up: int
     _player_down: int
+    _player_jump: int
 
     def __init__(self):
         self._player_left = pg.K_a
         self._player_right = pg.K_d
         self._player_up = pg.K_w
         self._player_down = pg.K_s
+        self._player_jump = pg.K_SPACE
 
     @property
     def player_left(self):
@@ -80,6 +82,10 @@ class KeyMaps:
     @property
     def player_down(self):
         return self._player_down
+
+    @property
+    def player_jump(self):
+        return self._player_jump
 
 
 key_map = KeyMaps()

@@ -11,7 +11,7 @@ from ggj.keys import key_manager
 from ggj.player import GrapplingHook, Player
 from ggj.camera import camera
 from ggj.game_object import GameObject, PhysicsBody
-from ggj.collision import GameObjectTracer
+from ggj.collision import GameObjectTracer, collision_object_manager
 from ggj.world import SurfaceBlock, map_to_world_coords
 
 logging.basicConfig(
@@ -50,12 +50,13 @@ def main():
     user_interface = UserInterface(screen)
     object_group: pg.sprite.Group = pg.sprite.Group()
 
-    player_init_pos = map_to_world_coords(pg.Vector2(0, 0))  # pg.Vector2(750, 60))
+    player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
     player = Player(player_init_pos)
     object_group.add(player)
     camera.follow(player)
 
-    tracer = GameObjectTracer(player, cast(list[GameObject], blocks))
+    tracer = GameObjectTracer(cast(list[GameObject], blocks))
+    collision_object_manager.register(SurfaceBlock, tracer)
 
     physics_bodies: list[PhysicsBody] = [player]
 
@@ -75,7 +76,6 @@ def main():
         screen.fill((255, 0, 255))
         apply_star_tiles(screen, camera, player)
         object_group.update()
-        tracer.update()
         for body in physics_bodies:
             body.point_mass.integrate()
         object_group.draw(screen)

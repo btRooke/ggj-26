@@ -1,11 +1,13 @@
 import pygame as pg
 import pygame.transform
+from typing import cast
 
 from ggj.assets import SPRITE_SHEET_PATH
 from ggj.camera import camera, screen_to_world_vector2
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
 from ggj.world import SurfaceBlock
+from ggj.collision import collision_object_manager
 
 import logging
 
@@ -22,6 +24,13 @@ PLAYER_COLLISION_BUFFER = 2
 SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
 SPRITE_SCALE = 4
+
+JUMP_FORCE = pg.Vector2(0, -200)
+
+WALKING_FORCE_MULTIPLIER = 20
+
+FRICTION_MULTIPLIER = 2
+AIR_RESIST_MULTIPLIER = .25
 
 
 def _load_sprite_sheet() -> list[pg.Surface]:
@@ -62,7 +71,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self.image = self.sprites[0]
         self.rect = self.image.get_rect()
         self._point_mass = PointMass(
-            start_pos, PLAYER_MASS, clamp_speed=PLAYER_MAX_SPEED
+            start_pos, PLAYER_MASS,
         )
         self._populate_rect()
 
@@ -71,18 +80,26 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self.rect = camera.get_screen_rect(self.get_world_rect())
 
     def update(self) -> None:
-        force_multiplier = 40
-        net_force = pg.Vector2(0, 0)
+        walking_force = pg.Vector2(0, 0)
 
-        if key_manager.is_key_down(key_map.player_down):
-            net_force += pg.Vector2(0, 1)
-        if key_manager.is_key_down(key_map.player_up):
-            net_force += pg.Vector2(0, -1)
-        if key_manager.is_key_down(key_map.player_left):
-            net_force += pg.Vector2(-1, 0)
-        if key_manager.is_key_down(key_map.player_right):
-            net_force += pg.Vector2(1, 0)
-        self._point_mass.add_force(force_multiplier * net_force)
+        if (
+            self._point_mass.velocity.x >= 0
+            or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
+        ) and key_manager.is_key_down(key_map.player_left):
+            walking_force += pg.Vector2(-1, 0)
+
+        if (
+            self._point_mass.velocity.x <= 0
+            or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
+        ) and key_manager.is_key_down(key_map.player_right):
+            walking_force += pg.Vector2(1, 0)
+
+        air_resist_force = (
+            pg.Vector2(-self._point_mass.velocity.x, 0) * AIR_RESIST_MULTIPLIER
+        )
+        self._point_mass.add_force(air_resist_force)
+
+        self._point_mass.add_force(WALKING_FORCE_MULTIPLIER * walking_force)
 
         if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
             world_pos_mouse = screen_to_world_vector2(pg.Vector2(*mouse_down_pos))
@@ -92,6 +109,15 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self._point_mass.add_force(spring_force)
 
         self._point_mass.apply_gravity()
+
+        # check for collisions against surfaces
+
+        surface_tracer = collision_object_manager.get(SurfaceBlock)
+        if surface_tracer is not None:
+            collide_surfaces = surface_tracer.get_collisions(self)
+            for surface in collide_surfaces:
+                self._on_collide_surface(cast(SurfaceBlock, surface))
+
         self._populate_rect()
 
     def get_world_rect(self) -> pg.Rect:
@@ -102,28 +128,38 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self.image.get_height(),
         )
 
+    def _is_player_jumping(self) -> bool:
+        return key_manager.is_key_down(key_map.player_jump)
+
     def _player_movement_action(self) -> bool:
-        return key_manager.get_mouse_down_pos() is not None
+        return key_manager.get_mouse_down_pos() is not None or key_manager.is_key_down(
+            key_map.player_jump
+        )
 
-    def on_collide(self, other: GameObject) -> None:
+    def _on_collide_surface(self, surface: SurfaceBlock) -> None:
         player_world_bounds = self.get_world_rect()
+        other_world_bounds = surface.get_world_rect()
+        if other_world_bounds.clipline(
+            (player_world_bounds.centerx, player_world_bounds.y),
+            (player_world_bounds.centerx, player_world_bounds.bottom),
+        ):
+            if self._player_movement_action():
+                if self._is_player_jumping():
+                    logging.debug(self._point_mass._accumulative_force)
+                    self._point_mass.add_force(JUMP_FORCE)
+                    logging.debug("player performed jump")
 
-        if isinstance(other, SurfaceBlock):
-            other_world_bounds = other.get_world_rect()
-
-            if other_world_bounds.clipline(
-                (player_world_bounds.centerx, player_world_bounds.y),
-                (player_world_bounds.centerx, player_world_bounds.bottom),
-            ):
-                self._point_mass.position.y = other_world_bounds.top - (player_world_bounds.height / 2)
-                if player_world_bounds.centery < other_world_bounds.centery:
-                    if (
-                        not self._player_movement_action()
-                        and self._point_mass.get_force().y > 0
-                    ):
-                        self._point_mass.reset_velocty()
-                        self._point_mass.add_force( pg.Vector2(0, -self._point_mass.get_force().y)
-                        )
+            else:
+                self._point_mass.position.y = other_world_bounds.top - (
+                    player_world_bounds.height / 2
+                )
+                if (
+                    not self._player_movement_action()
+                    and self._point_mass.get_force().y > 0
+                ):
+                    self._point_mass.add_force(
+                        pg.Vector2(0, -self._point_mass.get_force().y)
+                    )
                 else:
                     impulse = SURFACE_IMPULSE * -self._point_mass.get_force()
                     self._point_mass.add_force(impulse)
@@ -133,27 +169,31 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                         + (player_world_bounds.height / 2)
                         + PLAYER_COLLISION_BUFFER
                     )
+            friction_force = (
+                pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
+            )
+            self._point_mass.add_force(friction_force)
 
-            if other_world_bounds.clipline(
-                (player_world_bounds.left, player_world_bounds.centery),
-                (player_world_bounds.right, player_world_bounds.centery),
+        if other_world_bounds.clipline(
+            (player_world_bounds.left, player_world_bounds.centery),
+            (player_world_bounds.right, player_world_bounds.centery),
+        ):
+            if (
+                self._point_mass.get_force().x > 0
+                and player_world_bounds.centerx < other_world_bounds.centerx
             ):
-                if (
-                    self._point_mass.get_force().x > 0
-                    and player_world_bounds.centerx < other_world_bounds.centerx
-                ):
-                    self._point_mass.reset_velocty()
-                    self._point_mass.add_force(
-                        pg.Vector2(-self._point_mass.get_force().x, 0)
-                    )
-                elif (
-                    self._point_mass.get_force().x < 0
-                    and player_world_bounds.centerx > other_world_bounds.centerx
-                ):
-                    self._point_mass.reset_velocty()
-                    self._point_mass.add_force(
-                        pg.Vector2(-self._point_mass.get_force().x, 0)
-                    )
+                self._point_mass.reset_velocty()
+                self._point_mass.add_force(
+                    pg.Vector2(-self._point_mass.get_force().x, 0)
+                )
+            elif (
+                self._point_mass.get_force().x < 0
+                and player_world_bounds.centerx > other_world_bounds.centerx
+            ):
+                self._point_mass.reset_velocty()
+                self._point_mass.add_force(
+                    pg.Vector2(-self._point_mass.get_force().x, 0)
+                )
 
     @property
     def point_mass(self) -> PointMass:
