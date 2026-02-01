@@ -38,16 +38,19 @@ def main():
 
     done = False
 
-    surface_block_vectors = surface_blocks()
-
     # only render the 1/4 of the surface blocks
+
+    surface_block_vectors = surface_blocks().surface_blocks
     surface_block_vectors.sort(key=lambda b: (b.x, b.y))
     surface_block_vectors = surface_block_vectors[: len(surface_block_vectors)]
-
     blocks = [SurfaceBlock(v) for v in surface_block_vectors]
+
+    # user interface
 
     user_interface = UserInterface(screen)
     object_group: pg.sprite.Group = pg.sprite.Group()
+
+    # player stuff
 
     player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
     player = Player(player_init_pos)
