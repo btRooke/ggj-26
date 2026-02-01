@@ -55,7 +55,8 @@ class KeyManager:
                 logger.debug(f"mouse up at pos {pg.mouse.get_pos()}")
                 self._mouse_left_down_pos = None
                 self._mouse_right_down_pos = None
-                self._mouse_right_up_pos = pg.mouse.get_pos()
+                if event.button == 3:
+                    self._mouse_right_up_pos = pg.mouse.get_pos()
 
     def is_key_down(self, key: int) -> bool:
         """Checks if the key is in the set of keys that are down"""
