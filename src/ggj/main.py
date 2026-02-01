@@ -7,6 +7,7 @@ from ggj import camera as cam
 from ggj.background import apply_star_tiles, apply_mars
 from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
+from ggj.telegraph import TeleGraph, telegraph_placer
 from ggj.ui import UserInterface
 from ggj.keys import key_manager
 from ggj.player import GrapplingHook, Player
@@ -55,7 +56,9 @@ def main():
     player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
     player = Player(player_init_pos)
     object_group.add(player)
+    object_group.add(TeleGraph(player._point_mass.position.copy()))
     camera.follow(player)
+    object_group.add(*telegraph_placer.poles)
 
     tracer = GameObjectTracer(cast(list[GameObject], blocks))
     collision_object_manager.register(SurfaceBlock, tracer)
@@ -63,9 +66,7 @@ def main():
     physics_bodies: list[PhysicsBody] = [player]
 
     object_group.add(*blocks)
-
     grapling_hook = GrapplingHook(player)
-
     logger.info("starting main loop")
 
     while not done:
