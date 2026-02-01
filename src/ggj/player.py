@@ -1,3 +1,5 @@
+import enum
+
 import pygame as pg
 import pygame.transform
 from typing import cast
@@ -39,6 +41,11 @@ AIR_RESIST_MULTIPLIER = 0.25
 WALKING_SPRITE_COUNT = 2
 
 
+class FacingDirection(enum.Enum):
+    RIGHT = 1
+    LEFT = 2
+
+
 def _load_sprite_sheet() -> list[pg.Surface]:
     sheet = pg.image.load(SPRITE_SHEET_PATH).convert_alpha()
 
@@ -74,14 +81,23 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
         self._update_ticks_count = 0
 
-        # load sprites
+        # sprite and animation stuff, first load sheet and generate left and right sprites
 
         all_sprites = _load_sprite_sheet()
-        self._walking_sprites = all_sprites[:WALKING_SPRITE_COUNT]
+        self._right_walking_sprites = all_sprites[:WALKING_SPRITE_COUNT]
+        self._left_walking_sprites = [
+            pygame.transform.flip(s, flip_x=True, flip_y=False)
+            for s in self._right_walking_sprites
+        ]
+        self._walking_sprites = self._right_walking_sprites
+        self._direction = FacingDirection.RIGHT
         self.grappling_sprite = all_sprites[WALKING_SPRITE_COUNT]
         self._current_walking_sprite_index = 0
 
         self.image = self._walking_sprites[self._current_walking_sprite_index]
+
+        # other stuff
+
         self.rect = self.image.get_rect()
         self._point_mass = PointMass(
             start_pos,
@@ -121,6 +137,14 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def _handle_animations(self):
         self._update_ticks_count += 1
 
+        match self._direction:
+            case FacingDirection.LEFT:
+                self._walking_sprites = self._left_walking_sprites
+            case FacingDirection.RIGHT:
+                self._walking_sprites = self._right_walking_sprites
+            case default:
+                raise ValueError(f"unknown direction {default}")
+
         # animation
 
         if self._update_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1)) == 0:
@@ -147,6 +171,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             and self._can_walk_left(collide_surfaces)
         ) and key_manager.is_key_down(key_map.player_left):
             walking_force += pg.Vector2(-1, 0)
+            self._direction = FacingDirection.LEFT
 
         if (
             (
@@ -156,6 +181,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             and self._can_walk_right(collide_surfaces)
         ) and key_manager.is_key_down(key_map.player_right):
             walking_force += pg.Vector2(1, 0)
+            self._direction = FacingDirection.RIGHT
 
         air_resist_force = (
             pg.Vector2(-self._point_mass.velocity.x, 0) * AIR_RESIST_MULTIPLIER
