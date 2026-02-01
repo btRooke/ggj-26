@@ -17,7 +17,6 @@ PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
 SPRING_CONSTANT = 0.1
-SURFACE_IMPULSE = 60
 
 PLAYER_COLLISION_BUFFER = 20
 
@@ -148,8 +147,18 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._point_mass.apply_gravity()
 
         # check for collisions against surfaces
-        for surface in collide_surfaces:
-            self._on_collide_surface(cast(SurfaceBlock, surface))
+        def block_distance_to_player(block: GameObject) -> float:
+            return (
+                pg.Vector2(
+                    block.get_world_rect().centerx, block.get_world_rect().centery
+                )
+                - self._point_mass.position
+            ).magnitude()
+
+        block_by_distance = sorted(collide_surfaces, key=block_distance_to_player)
+
+        if len(block_by_distance):
+            self._on_collide_surface(cast(SurfaceBlock, block_by_distance[0]))
 
         self._populate_rect()
 
@@ -208,10 +217,6 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             (player_world_bounds.left, player_world_bounds.centery),
             (player_world_bounds.right, player_world_bounds.centery),
         ):
-            impulse_force = SURFACE_IMPULSE * self._point_mass.get_force().normalize()
-            self._point_mass.reset_velocty()
-            self._point_mass.add_force(pg.Vector2(-self._point_mass.get_force().x, 0))
-            self._point_mass.add_force(impulse_force)
             if player_world_bounds.centerx < other_world_bounds.centerx:
                 self._point_mass.position.x = other_world_bounds.x - (
                     player_world_bounds.width / 2
