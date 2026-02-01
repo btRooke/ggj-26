@@ -37,7 +37,7 @@ JUMP_FORCE = pg.Vector2(0, -400)
 
 WALKING_FORCE_MULTIPLIER = 20
 
-FRICTION_MULTIPLIER = 2
+FRICTION_MULTIPLIER = 0.25
 AIR_RESIST_MULTIPLIER = 0.25
 WALKING_SPRITE_COUNT = 2
 
@@ -176,21 +176,15 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         if surface_tracer is not None:
             collide_surfaces = surface_tracer.get_collisions(self)
         if (
-            (
-                self._point_mass.velocity.x >= 0
-                or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
-            )
-            and self._can_walk_left(collide_surfaces)
+            self._point_mass.velocity.x >= 0
+            or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
         ) and key_manager.is_key_down(key_map.player_left):
             walking_force += pg.Vector2(-1, 0)
             self._direction = FacingDirection.LEFT
 
         if (
-            (
-                self._point_mass.velocity.x <= 0
-                or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
-            )
-            and self._can_walk_right(collide_surfaces)
+            self._point_mass.velocity.x <= 0
+            or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
         ) and key_manager.is_key_down(key_map.player_right):
             walking_force += pg.Vector2(1, 0)
             self._direction = FacingDirection.RIGHT
@@ -287,7 +281,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                 dot_product = displacement * force
                 if dot_product > 0:
                     self._point_mass.add_force(
-                        pg.Vector2(0, -self._point_mass.get_force().y)
+                        pg.Vector2(-self._point_mass.get_force().x, 0)
                     )
 
     @property
