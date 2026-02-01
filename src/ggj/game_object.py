@@ -37,7 +37,7 @@ class PointMass:
         return self._accumulative_force
 
     def integrate(self):
-        logger.debug(f"applying force {self._accumulative_force}")
+        # logger.debug(f"applying force {self._accumulative_force}")
         self._accumulative_force = (
             self._accumulative_force.elementwise() * self._rigid_multiplier
         )

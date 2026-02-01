@@ -31,6 +31,7 @@ SPRITE_WALKING_BOB_PX = 8
 SPRITE_WALKING_FREQUENCY = (
     7  # frequency of change of sprite, not whole animation unfortunately
 )
+WALKING_ANIMATION_X_SPEED = 1.5
 
 JUMP_FORCE = pg.Vector2(0, -400)
 
@@ -138,6 +139,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         """Must be called every tick."""
         self._animation_ticks_count += 1
 
+        # set correct sprite sheet
+
         match self._direction:
             case FacingDirection.LEFT:
                 self._walking_sprites = self._left_walking_sprites
@@ -146,12 +149,21 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             case default:
                 raise ValueError(f"unknown direction {default}")
 
-        # animation
+        # animations
 
-        if self._animation_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1)) == 0:
-            self._current_walking_sprite_index = (
-                self._current_walking_sprite_index + 1
-            ) % WALKING_SPRITE_COUNT
+        if self._is_moving():
+            if (
+                self._animation_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1))
+                == 0
+            ):
+                self._current_walking_sprite_index = (
+                    self._current_walking_sprite_index + 1
+                ) % WALKING_SPRITE_COUNT
+                self.image = self._walking_sprites[self._current_walking_sprite_index]
+
+        elif self._is_grappling_hook():
+            self.image = self.grappling_sprite
+        else:
             self.image = self._walking_sprites[self._current_walking_sprite_index]
 
     def update(self) -> None:
@@ -212,6 +224,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self.image.get_width(),
             self.image.get_height(),
         )
+
+    def _is_moving(self):
+        return abs(self._point_mass.velocity.x) > WALKING_ANIMATION_X_SPEED
 
     def _is_player_jumping(self) -> bool:
         return key_manager.is_key_down(key_map.player_jump)
