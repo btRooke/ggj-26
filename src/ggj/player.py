@@ -3,16 +3,14 @@ import pygame as pg
 import pygame.transform
 from typing import cast
 
-from ggj.camera import camera, screen_to_world_rect, screen_to_world_vector2
-from ggj.assets import SPRITE_SHEET_PATH, GRAPPLE_PATH, WALKING_PATH
 from ggj.camera import camera, screen_to_world_vector2
+from ggj.assets import SPRITE_SHEET_PATH, GRAPPLE_PATH, WALKING_PATH
 from ggj.constants import FPS
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
-from ggj.world import SurfaceBlock
+from ggj.world import SURFACE_BLOCK_SIZE, SurfaceBlock
 from ggj.collision import collision_object_manager
-from ggj.telegraph import TeleGraph, telegraph_placer
-
+from ggj.telegraph import telegraph_placer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,8 +19,6 @@ PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
 SPRING_CONSTANT = 0.1
-
-PLAYER_COLLISION_BUFFER = 40
 
 SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
@@ -115,8 +111,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._populate_rect()
 
     def _populate_rect(self):
-        # contains the actual dimension on the screen
-        self.rect = camera.get_screen_rect(self.get_world_rect())
+        screen_rect = camera.get_screen_rect(self.get_world_rect())
+        self.rect.bottom = screen_rect.bottom
+        self.rect.centerx = screen_rect.centerx
 
     def _can_walk_right(self, surfaces: list[GameObject]) -> bool:
         player_world_bounds = self.get_world_rect()
@@ -230,10 +227,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
     def get_world_rect(self) -> pg.Rect:
         return pg.Rect(
-            self._point_mass.position.x - (self.image.get_width() / 2),
-            self._point_mass.position.y - (self.image.get_height() / 2),
-            self.image.get_width() - 20,
-            self.image.get_height() - 20,
+            round(self._point_mass.position.x - (SURFACE_BLOCK_SIZE[0] / 2)),
+            round(self._point_mass.position.y - (SURFACE_BLOCK_SIZE[0] / 2)),
+            *SURFACE_BLOCK_SIZE,
         )
 
     def _is_moving(self):
@@ -258,50 +254,69 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def _on_collide_surface(self, surface: SurfaceBlock) -> None:
         player_world_bounds = self.get_world_rect()
         other_world_bounds = surface.get_world_rect()
-        world_bounds_vector = pg.Vector2(
-            other_world_bounds.centerx, other_world_bounds.centery
-        )
-        if other_world_bounds.clipline(
-            (player_world_bounds.centerx, player_world_bounds.y),
-            (player_world_bounds.centerx, player_world_bounds.bottom),
-        ):
-            if self._player_movement_action():
-                if self._is_player_jumping():
-                    logging.debug(self._point_mass._accumulative_force)
-                    self._point_mass.add_force(JUMP_FORCE)
-                    logging.debug("player performed jump")
-                self._point_mass.position.y -= PLAYER_COLLISION_BUFFER
 
-            displacement = (world_bounds_vector - self._point_mass.position).normalize()
-            force = self._point_mass.get_force().normalize()
-            dot_product = displacement * force
-            if dot_product > 0:
+        # check for collision above the player
+        if other_world_bounds.clipline(
+            (player_world_bounds.centerx, player_world_bounds.centery),
+            (player_world_bounds.centerx, player_world_bounds.top),
+        ):
+            self._point_mass.velocity.y = 0
+            self._point_mass.position.y = other_world_bounds.bottom + (
+                SURFACE_BLOCK_SIZE[1] / 2
+            )
+            # only apply if the force is going down, if we are jumping we want to
+            # remove away from the object.
+            if self._point_mass.get_force().y < 0:
                 self._point_mass.add_force(
                     pg.Vector2(0, -self._point_mass.get_force().y)
                 )
 
+        # check for collision below the player
+        if other_world_bounds.clipline(
+            (player_world_bounds.centerx, player_world_bounds.centery),
+            (player_world_bounds.centerx, player_world_bounds.bottom),
+        ):
+            if self._is_player_jumping():
+                logging.debug(self._point_mass._accumulative_force)
+                self._point_mass.add_force(JUMP_FORCE)
+
+            self._point_mass.velocity.y = 0
             self._point_mass.position.y = other_world_bounds.top - (
-                player_world_bounds.height / 2
+                SURFACE_BLOCK_SIZE[1] / 2
             )
+            # only apply if the force is going down, if we are jumping we want to
+            # remove away from the object.
+            if self._point_mass.get_force().y > 0:
+                self._point_mass.add_force(
+                    pg.Vector2(0, -self._point_mass.get_force().y)
+                )
             friction_force = (
                 pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
             )
             self._point_mass.add_force(friction_force)
-
+            logger.debug(f"accumulative force: {self._point_mass._accumulative_force}")
+        # we are to the right of the surface.
         if other_world_bounds.clipline(
             (player_world_bounds.left, player_world_bounds.centery),
-            (player_world_bounds.right, player_world_bounds.centery),
+            (player_world_bounds.centerx, player_world_bounds.centery),
         ):
-            if self._point_mass.get_force().magnitude():
-                displacement = (
-                    world_bounds_vector - self._point_mass.position
-                ).normalize()
-                force = self._point_mass.get_force().normalize()
-                dot_product = displacement * force
-                if dot_product > 0:
-                    self._point_mass.add_force(
-                        pg.Vector2(-self._point_mass.get_force().x, 0)
-                    )
+            self._point_mass.velocity.x = 0
+            # only apply the force if the force is going into this object
+            if self._point_mass.get_force().x < 0:
+                self._point_mass.add_force(
+                    pg.Vector2(-self._point_mass.get_force().x, 0)
+                )
+
+        # we are to the left of the object
+        if other_world_bounds.clipline(
+            (player_world_bounds.right, player_world_bounds.centery),
+            (player_world_bounds.centerx, player_world_bounds.centery),
+        ):
+            self._point_mass.velocity.x = 0
+            if self._point_mass.get_force().x > 0:
+                self._point_mass.add_force(
+                    pg.Vector2(-self._point_mass.get_force().x, 0)
+                )
 
     @property
     def point_mass(self) -> PointMass:
