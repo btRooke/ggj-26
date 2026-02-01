@@ -3,7 +3,10 @@ import subprocess
 from typing import cast
 
 import pygame as pg
+import pygame.mixer_music
+
 from ggj import camera as cam
+from ggj.assets import THEME_PATH
 from ggj.background import apply_star_tiles, apply_mars
 from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
@@ -38,6 +41,11 @@ def main():
     pg.display.set_caption("Stickney Lineman")
 
     done = False
+
+    # theme
+
+    music = pygame.mixer.Sound(THEME_PATH)
+    music.play(loops=-1)
 
     # only render the 1/4 of the surface blocks
 

@@ -3,8 +3,9 @@ import pygame as pg
 import pygame.transform
 from typing import cast
 
-from ggj.assets import SPRITE_SHEET_PATH
 from ggj.camera import camera, screen_to_world_rect, screen_to_world_vector2
+from ggj.assets import SPRITE_SHEET_PATH, GRAPPLE_PATH, WALKING_PATH
+from ggj.camera import camera, screen_to_world_vector2
 from ggj.constants import FPS
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
@@ -82,6 +83,13 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
         self._animation_ticks_count = 0
 
+        # sound fx
+
+        self.grapple_sound = pygame.mixer.Sound(GRAPPLE_PATH)
+        self.grapple_sound.set_volume(0.1)
+        self.walking_sound = pygame.mixer.Sound(WALKING_PATH)
+        self.walking_sound.set_volume(0.06)
+
         # sprite and animation stuff, first load sheet and generate left and right sprites
 
         all_sprites = _load_sprite_sheet()
@@ -157,6 +165,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         # animations
 
         if self._is_moving():
+            self.walking_sound.play(loops=-1)
             if (
                 self._animation_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1))
                 == 0
@@ -169,6 +178,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         elif self._is_grappling_hook():
             self.image = self.grappling_sprite
         else:
+            self.walking_sound.stop()
             self.image = self._walking_sprites[self._current_walking_sprite_index]
 
     def update(self) -> None:
@@ -201,6 +211,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._point_mass.add_force(WALKING_FORCE_MULTIPLIER * walking_force)
 
         if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
+            self.grapple_sound.play()
             world_pos_mouse = screen_to_world_vector2(pg.Vector2(*mouse_down_pos))
             distance = world_pos_mouse - self._point_mass.position
             spring_force = SPRING_CONSTANT * distance
