@@ -147,18 +147,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._point_mass.apply_gravity()
 
         # check for collisions against surfaces
-        def block_distance_to_player(block: GameObject) -> float:
-            return (
-                pg.Vector2(
-                    block.get_world_rect().centerx, block.get_world_rect().centery
-                )
-                - self._point_mass.position
-            ).magnitude()
-
-        block_by_distance = sorted(collide_surfaces, key=block_distance_to_player)
-
-        if len(block_by_distance):
-            self._on_collide_surface(cast(SurfaceBlock, block_by_distance[0]))
+        for surface in collide_surfaces:
+            self._on_collide_surface(cast(SurfaceBlock, surface))
 
         self._populate_rect()
 
@@ -167,7 +157,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self._point_mass.position.x - (self.image.get_width() / 2),
             self._point_mass.position.y - (self.image.get_height() / 2),
             self.image.get_width(),
-            self.image.get_height() - 20,
+            self.image.get_height(),
         )
 
     def _is_player_jumping(self) -> bool:
@@ -198,33 +188,23 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                     logging.debug(self._point_mass._accumulative_force)
                     self._point_mass.add_force(JUMP_FORCE)
                     logging.debug("player performed jump")
-                if self._is_grappling_hook():
-                    self._point_mass.position.y -= PLAYER_COLLISION_BUFFER
-
+                self._point_mass.position.y -= PLAYER_COLLISION_BUFFER
             else:
-                self._point_mass.position.y = other_world_bounds.top - (
-                    player_world_bounds.height / 2
-                )
                 self._point_mass.add_force(
                     pg.Vector2(0, -self._point_mass.get_force().y)
                 )
-            friction_force = (
-                pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
+            self._point_mass.position.y = other_world_bounds.top - (
+                player_world_bounds.height / 2
             )
-            self._point_mass.add_force(friction_force)
 
         if other_world_bounds.clipline(
             (player_world_bounds.left, player_world_bounds.centery),
             (player_world_bounds.right, player_world_bounds.centery),
         ):
-            if player_world_bounds.centerx < other_world_bounds.centerx:
-                self._point_mass.position.x = other_world_bounds.x - (
-                    player_world_bounds.width / 2
-                )
-            else:
-                self._point_mass.position.x = other_world_bounds.x + (
-                    player_world_bounds.width / 2
-                )
+            friction_force = (
+                pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
+            )
+            self._point_mass.add_force(friction_force)
 
     @property
     def point_mass(self) -> PointMass:
