@@ -270,15 +270,25 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self._point_mass.position.y = other_world_bounds.top - (
                 player_world_bounds.height / 2
             )
+            friction_force = (
+                pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
+            )
+            self._point_mass.add_force(friction_force)
 
         if other_world_bounds.clipline(
             (player_world_bounds.left, player_world_bounds.centery),
             (player_world_bounds.right, player_world_bounds.centery),
         ):
-            friction_force = (
-                pg.Vector2(-self._point_mass.velocity.x, 0) * FRICTION_MULTIPLIER
-            )
-            self._point_mass.add_force(friction_force)
+            if self._point_mass.get_force().magnitude():
+                displacement = (
+                    world_bounds_vector - self._point_mass.position
+                ).normalize()
+                force = self._point_mass.get_force().normalize()
+                dot_product = displacement * force
+                if dot_product > 0:
+                    self._point_mass.add_force(
+                        pg.Vector2(0, -self._point_mass.get_force().y)
+                    )
 
     @property
     def point_mass(self) -> PointMass:
