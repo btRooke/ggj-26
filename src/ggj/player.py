@@ -25,7 +25,7 @@ SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
 SPRITE_SCALE = 4
 
-JUMP_FORCE = pg.Vector2(0, -200)
+JUMP_FORCE = pg.Vector2(0, -400)
 
 WALKING_FORCE_MULTIPLIER = 20
 
@@ -80,18 +80,55 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         # contains the actual dimension on the screen
         self.rect = camera.get_screen_rect(self.get_world_rect())
 
+    def _can_walk_right(self, surfaces: list[GameObject]) -> bool:
+        player_world_bounds = self.get_world_rect()
+        for surface in surfaces:
+            other_world_bounds = surface.get_world_rect()
+
+            if other_world_bounds.clipline(
+                (player_world_bounds.centerx, player_world_bounds.centery),
+                (player_world_bounds.right, player_world_bounds.centery),
+            ):
+                return False
+
+        return True
+
+    def _can_walk_left(self, surfaces: list[GameObject]) -> bool:
+        player_world_bounds = self.get_world_rect()
+        for surface in surfaces:
+            other_world_bounds = surface.get_world_rect()
+
+            if other_world_bounds.clipline(
+                (player_world_bounds.centerx, player_world_bounds.centery),
+                (player_world_bounds.left, player_world_bounds.centery),
+            ):
+                return False
+        return True
+
     def update(self) -> None:
         walking_force = pg.Vector2(0, 0)
 
+        # check for collisions against surfaces
+        surface_tracer = collision_object_manager.get(SurfaceBlock)
+        collide_surfaces = []
+        if surface_tracer is not None:
+            collide_surfaces = surface_tracer.get_collisions(self)
+
         if (
-            self._point_mass.velocity.x >= 0
-            or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
+            (
+                self._point_mass.velocity.x >= 0
+                or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
+            )
+            and self._can_walk_left(collide_surfaces)
         ) and key_manager.is_key_down(key_map.player_left):
             walking_force += pg.Vector2(-1, 0)
 
         if (
-            self._point_mass.velocity.x <= 0
-            or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
+            (
+                self._point_mass.velocity.x <= 0
+                or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
+            )
+            and self._can_walk_right(collide_surfaces)
         ) and key_manager.is_key_down(key_map.player_right):
             walking_force += pg.Vector2(1, 0)
 
@@ -99,7 +136,6 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             pg.Vector2(-self._point_mass.velocity.x, 0) * AIR_RESIST_MULTIPLIER
         )
         self._point_mass.add_force(air_resist_force)
-
         self._point_mass.add_force(WALKING_FORCE_MULTIPLIER * walking_force)
 
         if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
@@ -112,12 +148,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._point_mass.apply_gravity()
 
         # check for collisions against surfaces
-
-        surface_tracer = collision_object_manager.get(SurfaceBlock)
-        if surface_tracer is not None:
-            collide_surfaces = surface_tracer.get_collisions(self)
-            for surface in collide_surfaces:
-                self._on_collide_surface(cast(SurfaceBlock, surface))
+        for surface in collide_surfaces:
+            self._on_collide_surface(cast(SurfaceBlock, surface))
 
         self._populate_rect()
 
@@ -126,7 +158,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             self._point_mass.position.x - (self.image.get_width() / 2),
             self._point_mass.position.y - (self.image.get_height() / 2),
             self.image.get_width(),
-            self.image.get_height(),
+            self.image.get_height() - 20,
         )
 
     def _is_player_jumping(self) -> bool:
@@ -134,6 +166,11 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
     def _is_grappling_hook(self) -> bool:
         return key_manager.get_mouse_down_pos() is not None
+
+    def _is_player_walking(self) -> bool:
+        return key_manager.is_key_down(key_map.player_left) or key_manager.is_key_down(
+            key_map.player_right
+        )
 
     def _player_movement_action(self) -> bool:
         return key_manager.get_mouse_down_pos() is not None or key_manager.is_key_down(
@@ -171,21 +208,17 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             (player_world_bounds.left, player_world_bounds.centery),
             (player_world_bounds.right, player_world_bounds.centery),
         ):
-            if (
-                self._point_mass.get_force().x > 0
-                and player_world_bounds.centerx < other_world_bounds.centerx
-            ):
-                self._point_mass.reset_velocty()
-                self._point_mass.add_force(
-                    pg.Vector2(-self._point_mass.get_force().x, 0)
+            impulse_force = SURFACE_IMPULSE * self._point_mass.get_force().normalize()
+            self._point_mass.reset_velocty()
+            self._point_mass.add_force(pg.Vector2(-self._point_mass.get_force().x, 0))
+            self._point_mass.add_force(impulse_force)
+            if player_world_bounds.centerx < other_world_bounds.centerx:
+                self._point_mass.position.x = other_world_bounds.x - (
+                    player_world_bounds.width / 2
                 )
-            elif (
-                self._point_mass.get_force().x < 0
-                and player_world_bounds.centerx > other_world_bounds.centerx
-            ):
-                self._point_mass.reset_velocty()
-                self._point_mass.add_force(
-                    pg.Vector2(-self._point_mass.get_force().x, 0)
+            else:
+                self._point_mass.position.x = other_world_bounds.x + (
+                    player_world_bounds.width / 2
                 )
 
     @property
