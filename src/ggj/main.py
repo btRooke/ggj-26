@@ -4,7 +4,7 @@ from typing import cast
 
 import pygame as pg
 from ggj import camera as cam
-from ggj.background import apply_star_tiles
+from ggj.background import apply_star_tiles, apply_mars
 from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
 from ggj.ui import UserInterface
@@ -74,6 +74,7 @@ def main():
 
         screen.fill((255, 0, 255))
         apply_star_tiles(screen, camera, player)
+        apply_mars(screen, camera, player)
         object_group.update()
         for body in physics_bodies:
             body.point_mass.integrate()
