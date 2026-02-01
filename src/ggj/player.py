@@ -1,16 +1,16 @@
 import enum
-
 import pygame as pg
 import pygame.transform
 from typing import cast
 
 from ggj.assets import SPRITE_SHEET_PATH
-from ggj.camera import camera, screen_to_world_vector2
+from ggj.camera import camera, screen_to_world_rect, screen_to_world_vector2
 from ggj.constants import FPS
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
 from ggj.world import SurfaceBlock
 from ggj.collision import collision_object_manager
+from ggj.telegraph import TeleGraph, telegraph_placer
 
 import logging
 
@@ -135,6 +135,11 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
                 return False
         return True
 
+    def _place_telegraph(self) -> None:
+        assert (right_pos := key_manager.get_right_up_pos()) is not None
+        position = screen_to_world_vector2(pg.Vector2(*right_pos))
+        telegraph_placer.add(position)
+
     def _handle_animations(self):
         """Must be called every tick."""
         self._animation_ticks_count += 1
@@ -206,6 +211,9 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
         for surface in collide_surfaces:
             self._on_collide_surface(cast(SurfaceBlock, surface))
+
+        if key_manager.get_right_up_pos() is not None:
+            self._place_telegraph()
 
         self._populate_rect()
 
