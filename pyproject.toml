@@ -15,5 +15,8 @@ dev = [
     "pyright",
 ]
 
+[tool.setuptools.package-data]
+ggj = ["*.png", "*.mp3"]
+
 [tool.mypy]
 check_untyped_defs = true
