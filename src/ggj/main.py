@@ -3,18 +3,17 @@ import subprocess
 from typing import cast
 
 import pygame as pg
-import pygame.mixer_music
 
 from ggj import camera as cam
-from ggj.assets import THEME_PATH
+from ggj.assets import THEME_PATH, START_MENU_PATH
 from ggj.background import apply_star_tiles, apply_mars
 from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
 from ggj.telegraph import TeleGraph, telegraph_placer
 from ggj.ui import UserInterface
-from ggj.keys import key_manager
+from ggj.keys import key_manager, key_map
 from ggj.player import GrapplingHook, Player
-from ggj.camera import camera
+from ggj.camera import BASE_RESOLUTION, camera
 from ggj.game_object import GameObject, PhysicsBody
 from ggj.collision import GameObjectTracer, collision_object_manager
 from ggj.world import SurfaceBlock, map_to_world_coords
@@ -41,10 +40,11 @@ def main():
     pg.display.set_caption("Stickney Lineman")
 
     done = False
+    main_menu = True
 
     # theme
 
-    music = pygame.mixer.Sound(THEME_PATH)
+    music = pg.mixer.Sound(THEME_PATH)
     music.play(loops=-1)
 
     # only render the 1/4 of the surface blocks
@@ -55,6 +55,13 @@ def main():
     blocks = [SurfaceBlock(v) for v in surface_block_vectors]
 
     # user interface
+
+    start_img = pg.image.load(START_MENU_PATH)
+    scale = [
+        BASE_RESOLUTION[0] / start_img.get_width(),
+        BASE_RESOLUTION[1] / start_img.get_height(),
+    ]
+    start_img = pg.transform.scale_by(start_img, scale)
 
     user_interface = UserInterface(screen, surface_blocks().location_markers)
     object_group: pg.sprite.Group = pg.sprite.Group()
@@ -84,25 +91,36 @@ def main():
             done = True
             continue
 
-        screen.fill((255, 0, 255))
-        apply_star_tiles(screen, camera, player)
-        apply_mars(screen, camera, player)
-        object_group.update()
-        for body in physics_bodies:
-            body.point_mass.integrate()
-        object_group.draw(screen)
-        pg.draw.rect(
-            screen,
-            (0, 0, 255),
-            camera.get_screen_rect(
-                pg.Rect(80, 80, 200, 200),
-                zindex=2,
-            ),
-        )
-        camera.update()
-        grapling_hook.draw(screen)
-        user_interface.draw(screen)
-        user_interface.update(player.point_mass.position)
+        screen.fill((0, 0, 0))
+
+        if main_menu:
+            screen.blit(
+                start_img,
+                start_img.get_rect(),
+            )
+
+            if key_manager.is_key_down(key_map.start_game):
+                main_menu = False
+        else:
+            apply_star_tiles(screen, camera, player)
+            apply_mars(screen, camera, player)
+            object_group.update()
+            for body in physics_bodies:
+                body.point_mass.integrate()
+            object_group.draw(screen)
+            pg.draw.rect(
+                screen,
+                (0, 0, 255),
+                camera.get_screen_rect(
+                    pg.Rect(80, 80, 200, 200),
+                    zindex=2,
+                ),
+            )
+            camera.update()
+            grapling_hook.draw(screen)
+            user_interface.draw(screen)
+            user_interface.update(player.point_mass.position)
+
         pg.display.flip()
         clock.tick(FPS)
 
