@@ -79,7 +79,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def __init__(self, start_pos: pg.Vector2):
         super().__init__()
 
-        self._update_ticks_count = 0
+        self._animation_ticks_count = 0
 
         # sprite and animation stuff, first load sheet and generate left and right sprites
 
@@ -135,7 +135,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         return True
 
     def _handle_animations(self):
-        self._update_ticks_count += 1
+        """Must be called every tick."""
+        self._animation_ticks_count += 1
 
         match self._direction:
             case FacingDirection.LEFT:
@@ -147,7 +148,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
         # animation
 
-        if self._update_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1)) == 0:
+        if self._animation_ticks_count % (int(FPS * SPRITE_WALKING_FREQUENCY**-1)) == 0:
             self._current_walking_sprite_index = (
                 self._current_walking_sprite_index + 1
             ) % WALKING_SPRITE_COUNT
