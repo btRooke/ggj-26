@@ -71,7 +71,6 @@ def main():
     player_init_pos = map_to_world_coords(pg.Vector2(750, 60))
     player = Player(player_init_pos)
     object_group.add(player)
-    object_group.add(TeleGraph(player._point_mass.position.copy()))
     camera.follow(player)
     object_group.add(*telegraph_placer.poles)
 
