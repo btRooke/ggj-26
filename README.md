@@ -22,8 +22,8 @@ pip install git+https://github.com/btRooke/ggj-26.git
 
 If present, fix warnings about `ggj` not being in path.
 
-```
 Then run:
-```
 
+```
 ggj
+```
