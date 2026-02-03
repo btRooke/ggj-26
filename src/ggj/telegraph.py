@@ -22,12 +22,13 @@ class TeleGraph(pg.sprite.Sprite, GameObject):
         self.image.fill(COLOR)
 
     def _populate_rect(self):
-        self.rect = camera.get_screen_rect(self.get_world_rect())
+        self.rect = camera.get_screen_rect(self.world_rect)
 
     def update(self) -> None:
         self._populate_rect()
 
-    def get_world_rect(self) -> pg.Rect:
+    @property
+    def world_rect(self) -> pg.Rect:
         return pg.Rect(
             self._point_mass.position.x - (TELEGRAPH_DIMS[0] / 2),
             self._point_mass.position.y - (TELEGRAPH_DIMS[1] / 2),
@@ -64,9 +65,9 @@ class TeleGraphPolePlacer:
         if len(collisions := pg.sprite.spritecollide(pole, blocks, False)) == 0:
             pole._point_mass.position = prev_pos
         else:
-            pole._point_mass.position.x = collisions[0].get_world_rect().centerx
-            pole._point_mass.position.y = collisions[0].get_world_rect().top - (
-                pole.get_world_rect().height / 2
+            pole._point_mass.position.x = collisions[0].world_rect.centerx
+            pole._point_mass.position.y = collisions[0].world_rect.top - (
+                pole.world_rect.height / 2
             )
 
     @property

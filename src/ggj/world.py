@@ -62,12 +62,13 @@ class SurfaceBlock(pg.sprite.Sprite, GameObject):
         self._populate_rect()
 
     def _populate_rect(self):
-        self.rect = camera.get_screen_rect(self.get_world_rect())
+        self.rect = camera.get_screen_rect(self.world_rect)
 
     def update(self) -> None:
         self._populate_rect()
 
-    def get_world_rect(self) -> pg.Rect:
+    @property
+    def world_rect(self) -> pg.Rect:
         return pg.Rect(
             self._point_mass.position.x * SURFACE_BLOCK_SIZE[0]
             - (SURFACE_BLOCK_SIZE[0] / 2),
