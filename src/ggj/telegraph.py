@@ -59,9 +59,9 @@ class TeleGraphPolePlacer:
         pole._point_mass.position = position.copy()
         heapq.heappush(self._poles, pole)
 
-        tracer = collision_object_manager.get(SurfaceBlock)
-        assert tracer
-        if len(collisions := tracer.get_collisions(pole)) == 0:
+        blocks = collision_object_manager.get(SurfaceBlock)
+        assert blocks
+        if len(collisions := pg.sprite.spritecollide(pole, blocks, False)) == 0:
             pole._point_mass.position = prev_pos
         else:
             pole._point_mass.position.x = collisions[0].get_world_rect().centerx
