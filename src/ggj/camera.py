@@ -71,19 +71,20 @@ class Camera(game_object.GameObject):
         )
         return relative_rect
 
-    def get_world_rect(self) -> pg.Rect:
+    @property
+    def world_rect(self) -> pg.Rect:
         window = pg.display.Info()
         return screen_to_world_rect(pg.Rect(0, 0, window.current_w, window.current_h))
 
     def follow(self, obj: game_object.GameObject):
         self.follow_object = obj
-        self.player_box.center = obj.get_world_rect().center
+        self.player_box.center = obj.world_rect.center
 
     def update(self):
         if not self.follow_object:
             return
 
-        follow_rect = self.follow_object.get_world_rect()
+        follow_rect = self.follow_object.world_rect
 
         # Ensure the follower's center is always at the bottom midle of the viewport.
         if not self.player_box.collidepoint(

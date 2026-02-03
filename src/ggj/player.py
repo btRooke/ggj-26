@@ -111,7 +111,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._populate_rect()
 
     def _populate_rect(self):
-        screen_rect = camera.get_screen_rect(self.get_world_rect())
+        screen_rect = camera.get_screen_rect(self.world_rect)
         self.rect.bottom = screen_rect.bottom
         self.rect.centerx = screen_rect.centerx
 
@@ -198,7 +198,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
         self._populate_rect()
 
-    def get_world_rect(self) -> pg.Rect:
+    @property
+    def world_rect(self) -> pg.Rect:
         return pg.Rect(
             round(self._point_mass.position.x - (SURFACE_BLOCK_SIZE[0] / 2)),
             round(self._point_mass.position.y - (SURFACE_BLOCK_SIZE[0] / 2)),
@@ -225,8 +226,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         )
 
     def _on_collide_surface(self, surface: SurfaceBlock) -> None:
-        player_world_bounds = self.get_world_rect()
-        other_world_bounds = surface.get_world_rect()
+        player_world_bounds = self.world_rect
+        other_world_bounds = surface.world_rect
 
         # check for collision above the player
         if other_world_bounds.clipline(
@@ -306,7 +307,7 @@ class GrapplingHook(Drawable):
         if (mouse_pos := key_manager.get_mouse_down_pos()) is None:
             return
 
-        player_world_rect = self.player.get_world_rect()
+        player_world_rect = self.player.world_rect
         start_coords = camera.get_screen_rect(pg.Rect(*player_world_rect.center, 0, 0))
         pg.draw.line(
             screen,
