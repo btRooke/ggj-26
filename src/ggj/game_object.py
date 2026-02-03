@@ -60,8 +60,8 @@ class PointMass:
 
 
 class GameObject(Protocol):
-    def update(self) -> None: ...
-    def get_world_rect(self) -> pg.Rect: ...
+    @property
+    def world_rect(self) -> pg.Rect: ...
 
 
 class PhysicsBody(Protocol):
