@@ -35,7 +35,7 @@ JUMP_FORCE = pg.Vector2(0, -400)
 WALKING_FORCE_MULTIPLIER = 20
 
 FRICTION_MULTIPLIER = 0.25
-AIR_RESIST_MULTIPLIER = .75
+AIR_RESIST_MULTIPLIER = 0.75
 WALKING_SPRITE_COUNT = 2
 
 
@@ -115,31 +115,6 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self.rect.bottom = screen_rect.bottom
         self.rect.centerx = screen_rect.centerx
 
-    def _can_walk_right(self, surfaces: list[GameObject]) -> bool:
-        player_world_bounds = self.get_world_rect()
-        for surface in surfaces:
-            other_world_bounds = surface.get_world_rect()
-
-            if other_world_bounds.clipline(
-                (player_world_bounds.centerx, player_world_bounds.centery),
-                (player_world_bounds.right, player_world_bounds.centery),
-            ):
-                return False
-
-        return True
-
-    def _can_walk_left(self, surfaces: list[GameObject]) -> bool:
-        player_world_bounds = self.get_world_rect()
-        for surface in surfaces:
-            other_world_bounds = surface.get_world_rect()
-
-            if other_world_bounds.clipline(
-                (player_world_bounds.centerx, player_world_bounds.centery),
-                (player_world_bounds.left, player_world_bounds.centery),
-            ):
-                return False
-        return True
-
     def _place_telegraph(self) -> None:
         assert (right_pos := key_manager.get_right_up_pos()) is not None
         position = screen_to_world_vector2(pg.Vector2(*right_pos))
@@ -183,10 +158,10 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         walking_force = pg.Vector2(0, 0)
 
         # check for collisions against surfaces
-        surface_tracer = collision_object_manager.get(SurfaceBlock)
+        surfaces = collision_object_manager.get(SurfaceBlock)
         collide_surfaces = []
-        if surface_tracer is not None:
-            collide_surfaces = surface_tracer.get_collisions(self)
+        if surfaces is not None:
+            collide_surfaces = pg.sprite.spritecollide(self, surfaces, False)
         if (
             self._point_mass.velocity.x >= 0
             or abs(self._point_mass.velocity.x) < PLAYER_MAX_SPEED
@@ -201,9 +176,7 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
             walking_force += pg.Vector2(1, 0)
             self._direction = FacingDirection.RIGHT
 
-        air_resist_force = (
-            -self._point_mass.velocity * AIR_RESIST_MULTIPLIER
-        )
+        air_resist_force = -self._point_mass.velocity * AIR_RESIST_MULTIPLIER
         self._point_mass.add_force(air_resist_force)
         self._point_mass.add_force(WALKING_FORCE_MULTIPLIER * walking_force)
 

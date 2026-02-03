@@ -1,6 +1,5 @@
 import logging
 import subprocess
-from typing import cast
 
 import pygame as pg
 
@@ -9,13 +8,13 @@ from ggj.assets import THEME_PATH, START_MENU_PATH
 from ggj.background import apply_star_tiles, apply_mars
 from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
-from ggj.telegraph import TeleGraph, telegraph_placer
+from ggj.telegraph import telegraph_placer
 from ggj.ui import UserInterface
 from ggj.keys import key_manager, key_map
 from ggj.player import GrapplingHook, Player
 from ggj.camera import BASE_RESOLUTION, camera
-from ggj.game_object import GameObject, PhysicsBody
-from ggj.collision import GameObjectTracer, collision_object_manager
+from ggj.game_object import PhysicsBody
+from ggj import collision
 from ggj.world import SurfaceBlock, map_to_world_coords
 
 logging.basicConfig(
@@ -52,7 +51,12 @@ def main():
     surface_block_vectors = surface_blocks().surface_blocks
     surface_block_vectors.sort(key=lambda b: (b.x, b.y))
     surface_block_vectors = surface_block_vectors[: len(surface_block_vectors)]
-    blocks = [SurfaceBlock(v) for v in surface_block_vectors]
+
+    blocks: pg.sprite.Group = pg.sprite.Group()
+    for v in surface_block_vectors:
+        blocks.add(SurfaceBlock(v))
+
+    collision.collision_object_manager.register(SurfaceBlock, blocks)
 
     # user interface
 
@@ -73,9 +77,6 @@ def main():
     object_group.add(player)
     camera.follow(player)
     object_group.add(*telegraph_placer.poles)
-
-    tracer = GameObjectTracer(cast(list[GameObject], blocks))
-    collision_object_manager.register(SurfaceBlock, tracer)
 
     physics_bodies: list[PhysicsBody] = [player]
 
