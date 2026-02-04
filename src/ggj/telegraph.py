@@ -1,7 +1,8 @@
+from ggj import world
 from ggj.game_object import GameObject, PointMass
 import pygame as pg
 import logging
-from ggj.camera import camera
+from ggj.camera import camera, screen_to_world_vector2
 import heapq
 from ggj.collision import collision_object_manager
 from ggj.world import SurfaceBlock
@@ -53,11 +54,23 @@ class TeleGraphPolePlacer:
         ]
 
     def add(self, position: pg.Vector2):
+        """Add a telegraph at the mouse position.
+
+        Args:
+            position: position of the mouse on the screen.
+        """
         # maintain poles by position for comparison
-        logger.debug(f"adding telegraph at pos: {position}")
+        world_pos = screen_to_world_vector2(position)
+        logger.debug(
+            f"adding telegraph at screen pos: {position}, world pos: {world_pos}"
+        )
         pole = self._unused_poles.pop()
         prev_pos = pole._point_mass.position
-        pole._point_mass.position = position.copy()
+
+        # temporarily modify the display of the pole to check for collision
+        pole._point_mass.position = world_pos
+        pole.rect.x = round(position.x)
+        pole.rect.y = round(position.y)
         heapq.heappush(self._poles, pole)
 
         blocks = collision_object_manager.get(SurfaceBlock)
@@ -65,6 +78,7 @@ class TeleGraphPolePlacer:
         if len(collisions := pg.sprite.spritecollide(pole, blocks, False)) == 0:
             pole._point_mass.position = prev_pos
         else:
+            # modify the position of the pole
             pole._point_mass.position.x = collisions[0].world_rect.centerx
             pole._point_mass.position.y = collisions[0].world_rect.top - (
                 pole.world_rect.height / 2

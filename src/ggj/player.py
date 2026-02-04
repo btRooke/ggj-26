@@ -118,8 +118,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self.rect.centerx = screen_rect.centerx
 
     def _place_telegraph(self) -> None:
-        assert (right_pos := key_manager.get_right_up_pos()) is not None
-        position = screen_to_world_vector2(pg.Vector2(*right_pos))
+        assert (mouse_pos := key_manager.get_right_up_pos()) is not None
+        position = pg.Vector2(mouse_pos)
         telegraph_placer.add(position)
 
     def _handle_animations(self):
