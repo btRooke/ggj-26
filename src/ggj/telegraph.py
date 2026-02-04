@@ -43,7 +43,6 @@ class TeleGraph(pg.sprite.Sprite, GameObject):
 
 
 class TeleGraphPolePlacer:
-    _active_poles: list[TeleGraph]
     _sprite_group: pg.sprite.Group
 
     def __init__(self):
