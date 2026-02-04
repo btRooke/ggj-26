@@ -9,7 +9,7 @@ from ggj.constants import FPS
 from ggj.keys import key_manager, key_map
 from ggj.game_object import GameObject, PhysicsBody, PointMass, Drawable
 from ggj.world import SURFACE_BLOCK_SIZE, SurfaceBlock
-from ggj.collision import collision_object_manager
+from ggj.collision import collision_object_manager, point_collide_group
 from ggj.telegraph import telegraph_placer
 import logging
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 PLAYER_MAX_SPEED = 20
 PLAYER_MASS = 10
 
-SPRING_CONSTANT = 0.1
+SPRING_CONSTANT = 0.05
 
 SPRITE_HEIGHT = 42
 SPRITE_WIDTH = 42
@@ -37,6 +37,8 @@ WALKING_FORCE_MULTIPLIER = 20
 FRICTION_MULTIPLIER = 0.25
 AIR_RESIST_MULTIPLIER = 0.75
 WALKING_SPRITE_COUNT = 2
+
+MAX_GRAPPLE_DISTANCE = 1000
 
 
 class FacingDirection(enum.Enum):
@@ -180,13 +182,8 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
         self._point_mass.add_force(air_resist_force)
         self._point_mass.add_force(WALKING_FORCE_MULTIPLIER * walking_force)
 
-        if (mouse_down_pos := key_manager.get_mouse_down_pos()) is not None:
-            self.grapple_sound.play()
-            world_pos_mouse = screen_to_world_vector2(pg.Vector2(*mouse_down_pos))
-            distance = world_pos_mouse - self._point_mass.position
-            spring_force = SPRING_CONSTANT * distance
-            logger.debug(f"spring applying force {spring_force} distance {distance}")
-            self._point_mass.add_force(spring_force)
+        if self.can_grapple():
+            self._grapple()
 
         self._point_mass.apply_gravity()
 
@@ -214,16 +211,6 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
 
     def _is_grappling_hook(self) -> bool:
         return key_manager.get_mouse_down_pos() is not None
-
-    def _is_player_walking(self) -> bool:
-        return key_manager.is_key_down(key_map.player_left) or key_manager.is_key_down(
-            key_map.player_right
-        )
-
-    def _player_movement_action(self) -> bool:
-        return key_manager.get_mouse_down_pos() is not None or key_manager.is_key_down(
-            key_map.player_jump
-        )
 
     def _on_collide_surface(self, surface: SurfaceBlock) -> None:
         player_world_bounds = self.world_rect
@@ -296,6 +283,50 @@ class Player(pg.sprite.Sprite, GameObject, PhysicsBody):
     def point_mass(self) -> PointMass:
         return self._point_mass
 
+    def can_grapple(self) -> bool:
+        """True if the player is pressing right-click and surface is reachable"""
+        if (mouse_pos := key_manager.get_mouse_down_pos()) is None:
+            return False
+
+        # mouse position in the world
+        mouse_vec = pg.Vector2(*mouse_pos)
+        mouse_world_pos = screen_to_world_vector2(mouse_vec)
+        logging.debug(
+            f"mouse coords: {mouse_vec}, mouse world coords: {mouse_world_pos}"
+        )
+
+        # Check the distance. If the player can't reach the object then the
+        # player can't grapple.
+        if (
+            distance := (mouse_world_pos - self._point_mass.position).magnitude()
+        ) > MAX_GRAPPLE_DISTANCE:
+            logger.debug(
+                f"player cannot grapple distance: {distance} > {MAX_GRAPPLE_DISTANCE}"
+            )
+            return False
+
+        # Check that the mouse hovers over a surface object.
+        blocks = collision_object_manager.get(SurfaceBlock)
+        assert blocks is not None
+
+        # We can only use the grappling hook if it can actually attach to something.
+        mouse_collisions = point_collide_group(mouse_vec, blocks)
+        logger.debug(
+            f"number of grapple collisions with surface blocks: {mouse_collisions}"
+        )
+
+        return len(mouse_collisions) > 0
+
+    def _grapple(self) -> None:
+        self.grapple_sound.play()
+        mouse_down_pos = key_manager.get_mouse_down_pos()
+        assert mouse_down_pos
+        world_pos_mouse = screen_to_world_vector2(pg.Vector2(*mouse_down_pos))
+        distance = world_pos_mouse - self._point_mass.position
+        spring_force = SPRING_CONSTANT * distance
+        logger.debug(f"spring applying force {spring_force} distance {distance}")
+        self._point_mass.add_force(spring_force)
+
 
 class GrapplingHook(Drawable):
     player: Player
@@ -304,8 +335,13 @@ class GrapplingHook(Drawable):
         self.player = player
 
     def draw(self, screen: pg.Surface) -> None:
-        if (mouse_pos := key_manager.get_mouse_down_pos()) is None:
+        # If the grappling hook isn't being triggered.
+        # then there is nothing to do.
+        if not self.player.can_grapple():
             return
+
+        mouse_pos = key_manager.get_mouse_down_pos()
+        assert mouse_pos
 
         player_world_rect = self.player.world_rect
         start_coords = camera.get_screen_rect(pg.Rect(*player_world_rect.center, 0, 0))
