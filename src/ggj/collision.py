@@ -1,5 +1,6 @@
 from typing import Optional
 import pygame as pg
+from pygame.time import wait
 
 
 class CollisionObjects:
@@ -20,3 +21,25 @@ class CollisionObjects:
 
 
 collision_object_manager = CollisionObjects()
+
+
+def point_collide_group(
+    point: pg.Vector2, group: pg.sprite.Group
+) -> list[pg.sprite.Sprite]:
+    """Utility method for checking if a single point collides a group"""
+
+    class DummySprite(pg.sprite.Sprite):
+        """DummySprite that we can use to check for a collision"""
+
+        MOUSE_SIZE = (4, 4)
+
+        def __init__(self, *_: pg.sprite.Group):
+            super().__init__()
+            self.image = pg.Surface(DummySprite.MOUSE_SIZE)
+            self.rect = pg.Rect(
+                point.x,
+                point.y - DummySprite.MOUSE_SIZE[1] / 2,
+                *DummySprite.MOUSE_SIZE,
+            )
+
+    return pg.sprite.spritecollide(DummySprite(), group, False)
