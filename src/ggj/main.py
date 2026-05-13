@@ -8,7 +8,7 @@ from ggj.assets import THEME_PATH, START_MENU_PATH
 from ggj.background import apply_star_tiles, apply_mars
 from ggj.constants import FPS
 from ggj.map.importer import surface_blocks
-from ggj.telegraph import telegraph_placer
+from ggj.telegraph import telegraph_placer, telegraph_wire_manager
 from ggj.ui import UserInterface
 from ggj.keys import key_manager, key_map
 from ggj.player import GrapplingHook, Player
@@ -118,6 +118,7 @@ def main():
             )
             camera.update()
             grapling_hook.draw(screen)
+            telegraph_wire_manager.draw(screen)
             user_interface.draw(screen)
             user_interface.update(player.point_mass.position)
 

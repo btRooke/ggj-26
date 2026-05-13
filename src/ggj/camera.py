@@ -23,6 +23,23 @@ PARALLAX_LAYERS: dict[int, pg.Vector2] = {
 }
 
 
+def screen_to_world_vector2(screen_vector: pg.Vector2) -> pg.Vector2:
+    """Convert a screen coordinate to the corresponding world coordinate."""
+    camera_port = camera.get_view_port()
+
+    return pg.Vector2(
+        camera_port.x + screen_vector.x,
+        camera_port.y + screen_vector.y,
+    )
+
+
+def screen_to_world_rect(screen_rect: pg.Rect) -> pg.Rect:
+    """Convert a scren rectangle to a corresponding world rectangle."""
+    pos = screen_to_world_vector2(pg.Vector2(screen_rect.x, screen_rect.y))
+    dims = screen_to_world_vector2(pg.Vector2(screen_rect.width, screen_rect.height))
+    return pg.Rect(*pos, *dims)
+
+
 class Camera(game_object.GameObject):
     # Bounding box to follow the object being followed.
     # This is defined in world coordinates.
@@ -46,6 +63,15 @@ class Camera(game_object.GameObject):
 
         pos_vec2 = pg.Vector2(position.x, position.y) - self.player_box.center
         return pos_vec2.elementwise() * PARALLAX_LAYERS[cast(int, position.z)]
+
+    def get_screen_vector2(self, vec: pg.Vector2, zindex=1) -> pg.Vector2:
+        """Get the corresponding screen position of a point on the screen."""
+        relative_vec = self._get_relative(pg.Vector3(vec.x, vec.y, zindex))
+        window = pg.display.Info()
+        width, height = (window.current_w, window.current_h)
+        relative_vec.x += width / 2
+        relative_vec.y += height / 2
+        return relative_vec
 
     def get_screen_rect(self, rect: pg.Rect, zindex=1) -> pg.Rect:
         """
@@ -108,18 +134,3 @@ class Camera(game_object.GameObject):
 
 
 camera = Camera()
-
-
-def screen_to_world_vector2(screen_vector: pg.Vector2) -> pg.Vector2:
-    camera_port = camera.get_view_port()
-
-    return pg.Vector2(
-        camera_port.x + screen_vector.x,
-        camera_port.y + screen_vector.y,
-    )
-
-
-def screen_to_world_rect(screen_rect: pg.Rect) -> pg.Rect:
-    pos = screen_to_world_vector2(pg.Vector2(screen_rect.x, screen_rect.y))
-    dims = screen_to_world_vector2(pg.Vector2(screen_rect.width, screen_rect.height))
-    return pg.Rect(*pos, *dims)
